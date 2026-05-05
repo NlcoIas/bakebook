@@ -1,0 +1,20 @@
+{
+  "name": "bakebook",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n web,api -c blue,green \"pnpm --filter web dev\" \"pnpm --filter api dev\"",
+    "build": "pnpm --filter web build",
+    "typecheck": "pnpm --filter web typecheck",
+    "lint": "pnpm --filter web lint && pnpm --filter api lint",
+    "test": "pnpm --filter web test && pnpm --filter api test",
+    "e2e": "pnpm --filter web e2e",
+    "rename": "node scripts/rename.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "packageManager": "pnpm@10.33.3",
+  "pnpm": {
+    "onlyBuiltDependencies": ["@biomejs/biome", "esbuild"]
+  }
+}

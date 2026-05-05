@@ -20,9 +20,9 @@ dist/
 .env.*.local
 
 # Test results
-test-results/
-playwright-report/
+test-results/*
 !test-results/screenshots/
+playwright-report/
 
 # IDE
 .idea/

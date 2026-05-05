@@ -1,61 +1,51 @@
 # Bakebook
 
-A personal baking PWA. This folder is the project handoff — drop it into a fresh git repo and point Claude Code at `BOOTSTRAP.md`.
+Personal baking PWA. Self-hosted on Proxmox + Coolify + Cloudflare Tunnel.
 
-## What's in this folder
-
-| File | What it is |
-|---|---|
-| `CLAUDE.md` | The master spec. Read this to understand what's being built. |
-| `DESIGN.md` | The design system — tokens, components, the "is it on-design" checklist. |
-| `BOOTSTRAP.md` | The kickoff prompt for Claude Code. Self-contained operating rules. |
-| `phases/M0/task.md` | The first concrete session: project skeleton + design tokens + Coolify deploy. |
-| `design/v1-screens.html` | Visual reference: Home, Recipe, Active Bake, Journal screens. |
-| `design/v2-data.html` | Visual reference: Recipe (data-dense), Reflection, Insights. |
-| `README.md` | This file. |
-
-## How to start (you, the human)
-
-1. Drop this folder into your factory location, e.g. `~/claude/websites/bakebook/`.
-2. `cd` into it. `git init && git add . && git commit -m "M0 handoff"`.
-3. Open Claude Code in this directory.
-4. First message:
-
-   ```
-   Read BOOTSTRAP.md and follow it.
-   ```
-
-That's it. Claude Code will read the bootstrap, then `CLAUDE.md`, then `DESIGN.md`, then `phases/M0/task.md`, ack, and start.
-
-## How to start (alternative — autonomous overnight)
-
-If running with `--dangerously-skip-permissions` in a tmux session:
+## Quick start
 
 ```bash
-cd ~/claude/websites/bakebook
-claude --dangerously-skip-permissions <<EOF
-Read BOOTSTRAP.md and follow it. Execute M0 to completion.
-Stop only at the M0 exit gate (or if a genuine spec contradiction blocks you).
-EOF
+# Prerequisites: Node.js 20+, Docker
+cp .env.example apps/api/.env  # then edit as needed
+pnpm install
+docker compose up -d postgres
+cd apps/api && uv sync && uv run alembic upgrade head && cd ../..
+pnpm dev  # web on :3001, api on :8001
 ```
 
-The bootstrap rules require Claude Code to write `phases/M0/done.md` and `phases/M0/issues.md` before declaring done — so when you wake up, those files tell you the truth about what shipped.
+## Stack
 
-## Phases at a glance
+- **Frontend**: Next.js 14 (App Router) + TypeScript + Tailwind + shadcn/ui
+- **Backend**: FastAPI (Python 3.12) + SQLAlchemy 2.0 + Alembic
+- **Database**: PostgreSQL 16
+- **Package managers**: pnpm (web), uv (api)
 
-- **M0** — Skeleton, design tokens, Coolify deploy. *(concrete task file included)*
-- **M1** — Recipes + pantry + nutrition + ratios + cost.
-- **M2** — Active bake + photos + reflection screen.
-- **M3** — Versioning + tweaks + scaling + ready-by.
-- **M4** — Starter + PWA polish (offline, install, push).
-- **M5** — Insights screen.
+## Monorepo structure
 
-Phases beyond M0 don't have task files yet; Claude Code writes them at the start of each phase, in dialog with you if anything's unclear in the spec.
+```
+apps/web/     # Next.js PWA
+apps/api/     # FastAPI
+packages/types/  # Shared TS types
+```
 
-## When the design HTML disagrees with DESIGN.md
+## Commands
 
-DESIGN.md wins. The HTML is a picture; the markdown is the contract. If you spot a divergence, fix DESIGN.md and note it in a decision record.
+| Command | Description |
+|---|---|
+| `pnpm dev` | Run web + api concurrently |
+| `pnpm build` | Build web for production |
+| `pnpm typecheck` | TypeScript check |
+| `pnpm --filter web lint` | Biome lint (web) |
+| `pnpm --filter api lint` | Ruff lint (api) |
+| `pnpm --filter web test` | Vitest unit tests |
+| `pnpm --filter api test` | Pytest |
+| `pnpm --filter web e2e` | Playwright tests |
 
-## Open questions before M0
+## Phases
 
-See `CLAUDE.md` §18. Defaults are: domain = `bakebook.nicolasschaerer.ch`, R2 = new dedicated bucket, notification = generic chime, kitchen temp = manual entry, daily-value = 2000 kcal. Override any of these by replying to Claude Code's first ack message.
+- **M0** — Skeleton, design tokens, Coolify deploy
+- **M1** — Recipes + pantry + nutrition + ratios + cost
+- **M2** — Active bake + photos + reflection screen
+- **M3** — Versioning + tweaks + scaling + ready-by
+- **M4** — Starter + PWA polish
+- **M5** — Insights screen

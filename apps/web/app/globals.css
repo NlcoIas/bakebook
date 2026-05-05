@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --cream: #f4ead4;
+    --cream-deep: #ecdfc1;
+    --paper: #f8f1dd;
+    --ink: #1d1410;
+    --ink-soft: #4a3a30;
+    --ink-faint: #8a7a6c;
+    --amber: #b8501f;
+    --amber-bright: #d96826;
+    --olive: #6b6939;
+    --blush: #d8a892;
+    --rule: #b8a98c;
+    --good: #4a7d3d;
+    --warn: #c08e1f;
+  }
+
+  .kitchen-mode {
+    --espresso: #14100c;
+    --espresso-2: #1e1813;
+    --cream-dim: #e9dcc1;
+    --hot-amber: #ec7a37;
+    --hot-amber-glow: rgba(236, 122, 55, 0.18);
+    --olive-dim: #9a956a;
+  }
+
+  html, body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: var(--font-display), ui-serif, Georgia, serif;
+    font-feature-settings: "ss01", "ss02";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Paper grain background */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.5;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='4'/><feColorMatrix values='0 0 0 0 0.45  0 0 0 0 0.36  0 0 0 0 0.26  0 0 0 0.18 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    z-index: 1000;
+  }
+}
