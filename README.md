@@ -8,7 +8,7 @@ Personal baking PWA. Self-hosted on Proxmox + Coolify + Cloudflare Tunnel.
 # Prerequisites: Node.js 20+, Docker
 cp .env.example apps/api/.env  # then edit as needed
 pnpm install
-docker compose up -d postgres
+docker compose -f docker-compose.dev.yml up -d postgres
 cd apps/api && uv sync && uv run alembic upgrade head && cd ../..
 pnpm dev  # web on :3001, api on :8001
 ```

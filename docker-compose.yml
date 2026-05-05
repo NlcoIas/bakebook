@@ -1,12 +1,38 @@
 services:
-  postgres:
-    image: postgres:16
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    expose:
+      - "3000"
     environment:
-      POSTGRES_USER: bakebook
-      POSTGRES_PASSWORD: bakebook
+      - API_URL=http://api:8000
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    expose:
+      - "8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://bakebook:${POSTGRES_PASSWORD:-bakebook}@db:5432/bakebook
+      - ENV=prod
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
       POSTGRES_DB: bakebook
-    ports:
-      - "5433:5432"
+      POSTGRES_USER: bakebook
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bakebook}
+    expose:
+      - "5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -14,6 +40,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
 volumes:
   pgdata:
