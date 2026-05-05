@@ -134,6 +134,7 @@ class RecipeOut(RecipeBase):
     nutrition: dict | None = None
     cost: dict | None = None
     ratios: dict | None = None
+    allergens: list[str] = []
 
 
 # --- Scale schemas ---

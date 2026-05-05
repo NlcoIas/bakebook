@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -10,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.db import get_db
+from app.models.bake import Bake, BakeTweak
 from app.models.recipe import Recipe, RecipeIngredient, RecipeStep
 from app.schemas.recipe import (
     RecipeCreate,
@@ -115,7 +117,30 @@ def _compute_recipe_data(recipe: Recipe) -> dict:
             "inoculationRate": float(ratios.inoculation_rate),
         }
 
+    # Allergens
+    allergens = _compute_allergens(recipe.ingredients)
+    if allergens:
+        result["allergens"] = allergens
+
     return result
+
+
+GLUTEN_NAMES = {"wheat", "spelt", "rye", "bread flour", "all-purpose", "zopfmehl", "semolina"}
+
+
+def _compute_allergens(ingredients: list[RecipeIngredient]) -> list[str]:
+    allergens = set()
+    for ing in ingredients:
+        name_lower = ing.name.lower()
+        if ing.role == "flour" or any(g in name_lower for g in GLUTEN_NAMES):
+            allergens.add("gluten")
+        if ing.role == "dairy":
+            allergens.add("dairy")
+        if ing.role == "egg":
+            allergens.add("egg")
+        if "nut" in name_lower or "almond" in name_lower or "pecan" in name_lower:
+            allergens.add("tree nuts")
+    return sorted(allergens)
 
 
 def _macros_dict(m) -> dict:
@@ -176,6 +201,7 @@ async def get_recipe(recipe_id: UUID, db: AsyncSession = Depends(get_db)):
     out.nutrition = computed.get("nutrition")
     out.cost = computed.get("cost")
     out.ratios = computed.get("ratios")
+    out.allergens = computed.get("allergens", [])
     return out
 
 
@@ -196,6 +222,7 @@ async def get_recipe_by_slug(slug: str, db: AsyncSession = Depends(get_db)):
     out.nutrition = computed.get("nutrition")
     out.cost = computed.get("cost")
     out.ratios = computed.get("ratios")
+    out.allergens = computed.get("allergens", [])
     return out
 
 
@@ -221,6 +248,7 @@ async def create_recipe(data: RecipeCreate, db: AsyncSession = Depends(get_db)):
     out.nutrition = computed.get("nutrition")
     out.cost = computed.get("cost")
     out.ratios = computed.get("ratios")
+    out.allergens = computed.get("allergens", [])
     return out
 
 
@@ -256,6 +284,7 @@ async def update_recipe(
     out.nutrition = computed.get("nutrition")
     out.cost = computed.get("cost")
     out.ratios = computed.get("ratios")
+    out.allergens = computed.get("allergens", [])
     return out
 
 
@@ -341,6 +370,7 @@ async def create_version(recipe_id: UUID, db: AsyncSession = Depends(get_db)):
     out.nutrition = computed.get("nutrition")
     out.cost = computed.get("cost")
     out.ratios = computed.get("ratios")
+    out.allergens = computed.get("allergens", [])
     return out
 
 
@@ -414,6 +444,7 @@ async def fork_recipe(recipe_id: UUID, db: AsyncSession = Depends(get_db)):
     out.nutrition = computed.get("nutrition")
     out.cost = computed.get("cost")
     out.ratios = computed.get("ratios")
+    out.allergens = computed.get("allergens", [])
     return out
 
 
@@ -460,3 +491,226 @@ async def scale_recipe(
         }
         for s in scaled
     ]
+
+
+# --- Pending tweaks ---
+
+
+@router.get("/{recipe_id}/pending-tweaks")
+async def get_pending_tweaks(recipe_id: UUID, db: AsyncSession = Depends(get_db)):
+    """All unresolved apply_next_time tweaks across past bakes of this recipe."""
+    result = await db.execute(
+        select(BakeTweak)
+        .join(Bake, BakeTweak.bake_id == Bake.id)
+        .where(
+            Bake.recipe_id == recipe_id,
+            BakeTweak.apply_next_time.is_(True),
+            BakeTweak.resolved_in_recipe_id.is_(None),
+        )
+    )
+    tweaks = result.scalars().all()
+    return [
+        {
+            "id": str(t.id),
+            "bakeId": str(t.bake_id),
+            "change": t.change,
+            "reason": t.reason,
+            "ingredientId": str(t.ingredient_id) if t.ingredient_id else None,
+            "stepId": str(t.step_id) if t.step_id else None,
+        }
+        for t in tweaks
+    ]
+
+
+# --- Apply tweaks to create new version ---
+
+
+TWEAK_PATTERN = re.compile(
+    r"([+-])\s*(\d+(?:\.\d+)?)\s*g?\s+(.+)", re.IGNORECASE
+)
+
+
+@router.post("/{recipe_id}/tweaks/apply", response_model=RecipeOut, status_code=201)
+async def apply_tweaks(
+    recipe_id: UUID,
+    body: dict,
+    db: AsyncSession = Depends(get_db),
+):
+    """Apply pending tweaks to create a new recipe version."""
+    tweak_ids = body.get("tweakIds", [])
+    if not tweak_ids:
+        raise HTTPException(400, "No tweak IDs provided")
+
+    # Load recipe
+    result = await db.execute(_recipe_query().where(Recipe.id == recipe_id))
+    recipe = result.scalar_one_or_none()
+    if not recipe:
+        raise HTTPException(404, "Recipe not found")
+
+    # Load tweaks
+    tweak_result = await db.execute(
+        select(BakeTweak).where(BakeTweak.id.in_([UUID(t) for t in tweak_ids]))
+    )
+    tweaks = list(tweak_result.scalars().all())
+
+    # Create new version (copy from version endpoint logic)
+    root_id = recipe.version_of_id or recipe.id
+    max_ver = await db.execute(
+        select(func.max(Recipe.version_number)).where(
+            (Recipe.version_of_id == root_id) | (Recipe.id == root_id)
+        )
+    )
+    next_ver = (max_ver.scalar() or 1) + 1
+
+    new_recipe = Recipe(
+        version_of_id=root_id,
+        version_number=next_ver,
+        title=recipe.title,
+        slug=recipe.slug,
+        category=recipe.category,
+        summary=recipe.summary,
+        yields=recipe.yields,
+        servings=recipe.servings,
+        serving_g=recipe.serving_g,
+        total_time_min=recipe.total_time_min,
+        active_time_min=recipe.active_time_min,
+        difficulty=recipe.difficulty,
+        equipment=list(recipe.equipment),
+        hero_photo_key=recipe.hero_photo_key,
+        source=recipe.source,
+        notes=recipe.notes,
+        target_dough_g=recipe.target_dough_g,
+    )
+
+    # Copy ingredients (will be modified by tweaks)
+    ingredient_map: dict[str, RecipeIngredient] = {}
+    for ing in recipe.ingredients:
+        new_ing = RecipeIngredient(
+            pantry_item_id=ing.pantry_item_id,
+            ord=ing.ord,
+            group_label=ing.group_label,
+            name=ing.name,
+            grams=ing.grams,
+            unit_display=ing.unit_display,
+            unit_display_qty=ing.unit_display_qty,
+            role=ing.role,
+            leaven_flour_pct=ing.leaven_flour_pct,
+            cost_override_per_kg=ing.cost_override_per_kg,
+            nutrition_override=ing.nutrition_override,
+            notes=ing.notes,
+            optional=ing.optional,
+        )
+        new_recipe.ingredients.append(new_ing)
+        ingredient_map[ing.name.lower()] = new_ing
+        if ing.role:
+            ingredient_map[ing.role.lower()] = new_ing
+
+    # Copy steps
+    for step in recipe.steps:
+        new_recipe.steps.append(
+            RecipeStep(
+                ord=step.ord,
+                title=step.title,
+                body=step.body,
+                timer_seconds=step.timer_seconds,
+                min_seconds=step.min_seconds,
+                max_seconds=step.max_seconds,
+                target_temp_c=step.target_temp_c,
+                temp_kind=step.temp_kind,
+                parallelizable_with=list(step.parallelizable_with),
+            )
+        )
+
+    # Apply tweaks to ingredients
+    for tweak in tweaks:
+        match = TWEAK_PATTERN.match(tweak.change)
+        if match:
+            sign, amount_str, target = match.groups()
+            amount = Decimal(amount_str)
+            if sign == "-":
+                amount = -amount
+
+            # Find ingredient by name or role
+            target_lower = target.strip().lower()
+            ing = ingredient_map.get(target_lower)
+            if ing and ing.grams is not None:
+                ing.grams = max(Decimal(0), ing.grams + amount)
+
+        # Mark tweak as resolved
+        tweak.resolved_in_recipe_id = new_recipe.id
+
+    db.add(new_recipe)
+    await db.commit()
+
+    # Reload with relationships
+    result = await db.execute(_recipe_query().where(Recipe.id == new_recipe.id))
+    new = result.scalar_one()
+    computed = _compute_recipe_data(new)
+    out = RecipeOut.model_validate(new, from_attributes=True)
+    out.nutrition = computed.get("nutrition")
+    out.cost = computed.get("cost")
+    out.ratios = computed.get("ratios")
+    out.allergens = computed.get("allergens", [])
+    return out
+
+
+# --- Bake history ---
+
+
+@router.get("/{recipe_id}/bakes")
+async def recipe_bakes(recipe_id: UUID, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(Bake)
+        .where(Bake.recipe_id == recipe_id)
+        .order_by(Bake.started_at.desc())
+    )
+    bakes = result.scalars().all()
+    return [
+        {
+            "id": str(b.id),
+            "startedAt": b.started_at.isoformat(),
+            "finishedAt": b.finished_at.isoformat() if b.finished_at else None,
+            "status": b.status,
+            "rating": b.rating,
+            "outcome": b.outcome,
+        }
+        for b in bakes
+    ]
+
+
+# --- Ready-by ---
+
+
+@router.get("/{recipe_id}/ready-by")
+async def ready_by(
+    recipe_id: UUID,
+    target: str = Query(..., description="ISO8601 target end time"),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.services.schedule import StepInput, compute_ready_by
+
+    result = await db.execute(_recipe_query().where(Recipe.id == recipe_id))
+    recipe = result.scalar_one_or_none()
+    if not recipe:
+        raise HTTPException(404, "Recipe not found")
+
+    target_dt = datetime.fromisoformat(target)
+
+    steps = [
+        StepInput(
+            ord=s.ord,
+            timer_seconds=s.timer_seconds,
+            min_seconds=s.min_seconds,
+            max_seconds=s.max_seconds,
+            parallelizable_with=list(s.parallelizable_with) if s.parallelizable_with else [],
+        )
+        for s in recipe.steps
+    ]
+
+    result_data = compute_ready_by(steps, target_dt)
+    return {
+        "startAt": result_data.start_at.isoformat(),
+        "expectedEnd": result_data.expected_end.isoformat(),
+        "rangeStartAt": result_data.range_start_at.isoformat(),
+        "rangeEndAt": result_data.range_end_at.isoformat(),
+    }
