@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Suspense } from "react";
 import { api } from "@/lib/api";
@@ -171,6 +172,16 @@ function RecipeDetail() {
 
       <div className="mt-6">
         <HandRule seed={recipe.title.charCodeAt(2) || 29} />
+      </div>
+
+      {/* Start bake button */}
+      <div className="mt-4">
+        <Link
+          href={`/recipes/${recipe.id}/bake`}
+          className="block w-full py-4 text-center font-mono text-[11px] tracking-[0.18em] uppercase bg-amber text-cream rounded-pill font-medium shadow-fab"
+        >
+          Start bake
+        </Link>
       </div>
 
       {/* Data panels */}

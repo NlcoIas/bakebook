@@ -130,11 +130,98 @@ export const api = {
     get: (id: string) => fetchJson<Recipe>(`/recipes/${id}`),
     getBySlug: (slug: string) => fetchJson<Recipe>(`/recipes/by-slug/${slug}`),
   },
+  bakes: {
+    list: () => fetchJson<BakeListItem[]>("/bakes"),
+    get: (id: string) => fetchJson<BakeDetail>(`/bakes/${id}`),
+    start: (data: {
+      recipeId: string;
+      scaleMultiplier?: number;
+      kitchenTempC?: number;
+      kitchenHumidity?: number;
+      flourBrand?: string;
+    }) => fetchJson<BakeDetail>("/bakes", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: Record<string, unknown>) =>
+      fetchJson<BakeDetail>(`/bakes/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    addTweak: (bakeId: string, data: { change: string; reason?: string; applyNextTime?: boolean }) =>
+      fetchJson<BakeTweak>(`/bakes/${bakeId}/tweaks`, { method: "POST", body: JSON.stringify(data) }),
+    requestPhotoUpload: (bakeId: string) =>
+      fetchJson<{ r2Key: string; presignedUrl: string; expiresIn: number }>(`/bakes/${bakeId}/photos?filename=photo.jpg`, { method: "POST" }),
+    confirmPhoto: (bakeId: string, r2Key: string, kind?: string, stepOrd?: number) => {
+      const params = new URLSearchParams();
+      if (kind) params.set("kind", kind);
+      if (stepOrd != null) params.set("step_ord", String(stepOrd));
+      const qs = params.toString();
+      return fetchJson<BakePhoto>(`/bakes/${bakeId}/photos/${r2Key}/confirm${qs ? `?${qs}` : ""}`, { method: "POST" });
+    },
+  },
   pantry: {
     list: () => fetchJson<PantryItem[]>("/pantry"),
     nutritionTable: () => fetchJson<Record<string, Record<string, number>>>("/pantry/nutrition-table"),
   },
 };
+
+// --- Bake types ---
+
+export interface BakeListItem {
+  id: string;
+  recipeId: string;
+  recipeTitle: string | null;
+  recipeCategory: string | null;
+  startedAt: string;
+  finishedAt: string | null;
+  status: string;
+  rating: number | null;
+  outcome: string | null;
+}
+
+export interface BakePhoto {
+  id: string;
+  bakeId: string;
+  r2Key: string;
+  url: string | null;
+  caption: string | null;
+  kind: string | null;
+  stepOrd: number | null;
+  takenAt: string;
+}
+
+export interface BakeTweak {
+  id: string;
+  bakeId: string;
+  change: string;
+  reason: string | null;
+  ingredientId: string | null;
+  stepId: string | null;
+  applyNextTime: boolean;
+  resolvedInRecipeId: string | null;
+}
+
+export interface BakeDetail {
+  id: string;
+  recipeId: string;
+  startedAt: string;
+  finishedAt: string | null;
+  status: string;
+  currentStep: number;
+  scaleMultiplier: number;
+  kitchenTempC: number | null;
+  kitchenHumidity: number | null;
+  flourBrand: string | null;
+  rating: number | null;
+  outcome: string | null;
+  startWeightG: number | null;
+  finalWeightG: number | null;
+  riseHeightCm: number | null;
+  internalTempC: number | null;
+  crumbScore: number | null;
+  crustScore: number | null;
+  notes: string | null;
+  waterLossPct: number | null;
+  photos: BakePhoto[];
+  tweaks: BakeTweak[];
+  recipeTitle: string | null;
+  recipeCategory: string | null;
+}
 
 export interface PantryItem {
   id: string;
