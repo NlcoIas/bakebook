@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, JetBrains_Mono } from "next/font/google";
+import { BottomNav } from "@/components/shared/BottomNav";
+import { Providers } from "./providers";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -32,7 +34,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${fraunces.variable} ${jetbrains.variable}`}>
-      <body>{children}</body>
+      <body>
+        <Providers>
+          <div className="pb-24">{children}</div>
+          <BottomNav />
+        </Providers>
+      </body>
     </html>
   );
 }
