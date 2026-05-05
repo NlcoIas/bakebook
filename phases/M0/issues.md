@@ -31,3 +31,27 @@
 ## 8. ruff import sorting
 **Problem**: ruff flagged unsorted imports in `alembic/env.py` and `app/auth.py`.
 **Fix**: Ran `ruff check --fix .` to auto-sort.
+
+## 9. GitHub repo had to be public for Coolify
+**Problem**: Coolify can't access private repos without SSH key or GitHub App setup.
+**Fix**: Made the repo public. (It's behind Cloudflare Access anyway.)
+**Commit**: bdda8f8
+
+## 10. Docker COPY with shell fallback doesn't work
+**Problem**: `COPY ... 2>/dev/null || true` is not valid Dockerfile syntax. `packages/types` has no `node_modules`.
+**Fix**: Changed to `COPY --from=deps /app ./` to copy entire deps stage.
+**Commit**: 91e7d76
+
+## 11. Empty `public/` dir not in git
+**Problem**: Docker COPY failed because `apps/web/public/` had no tracked files.
+**Fix**: Added `.gitkeep` to `public/`.
+**Commit**: bdda8f8
+
+## 12. Next.js rewrites not baked in standalone build
+**Problem**: `process.env.API_URL` was undefined at build time, so `rewrites()` returned no entries in the standalone output.
+**Fix**: Added `ARG API_URL=http://api:8000` and `ENV API_URL=$API_URL` to the builder stage of the web Dockerfile.
+**Commit**: 0d9142a
+
+## 13. Postgres password mismatch in Coolify
+**Problem**: DB was initialized with default password `bakebook` on first deploy, then Coolify set a generated password on redeploy.
+**Fix**: Deleted the generated password env var and let docker-compose use the default. Personal app behind Cloudflare Access.
