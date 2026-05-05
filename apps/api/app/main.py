@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.auth import get_current_user
 from app.config import settings
 from app.routes.bakes import router as bakes_router
+from app.routes.insights import router as insights_router
 from app.routes.pantry import router as pantry_router
 from app.routes.recipes import router as recipes_router
 from app.routes.starters import router as starters_router
@@ -13,6 +14,7 @@ app.include_router(recipes_router)
 app.include_router(pantry_router)
 app.include_router(bakes_router)
 app.include_router(starters_router)
+app.include_router(insights_router)
 
 # CORS for local dev
 if settings.env == "dev":
