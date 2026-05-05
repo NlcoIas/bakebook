@@ -1,0 +1,1582 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Bakebook — Design v0.2 · Data Layer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..900,0..100&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #f4ead4;
+    --cream-deep: #ecdfc1;
+    --paper: #f8f1dd;
+    --ink: #1d1410;
+    --ink-soft: #4a3a30;
+    --ink-faint: #8a7a6c;
+    --amber: #b8501f;
+    --amber-bright: #d96826;
+    --olive: #6b6939;
+    --blush: #d8a892;
+    --rule: #b8a98c;
+    --good: #4a7d3d;
+    --warn: #c08e1f;
+
+    --espresso: #14100c;
+    --espresso-2: #1e1813;
+    --cream-dim: #e9dcc1;
+    --hot-amber: #ec7a37;
+    --hot-amber-glow: rgba(236, 122, 55, 0.18);
+    --olive-dim: #9a956a;
+
+    --display: "Fraunces", ui-serif, Georgia, serif;
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: var(--display);
+    font-feature-settings: "ss01", "ss02";
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    pointer-events: none;
+    opacity: 0.5;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='4'/><feColorMatrix values='0 0 0 0 0.45  0 0 0 0 0.36  0 0 0 0 0.26  0 0 0 0.18 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    z-index: 1000;
+  }
+
+  .doc-header {
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 56px 32px 24px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .doc-header .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 18px;
+  }
+  .doc-header h1 {
+    font-family: var(--display);
+    font-weight: 350;
+    font-size: clamp(40px, 6vw, 84px);
+    letter-spacing: -0.025em;
+    line-height: 0.95;
+    font-variation-settings: "opsz" 144, "SOFT" 100;
+  }
+  .doc-header h1 em { font-style: italic; font-weight: 300; color: var(--amber); }
+  .doc-header .lede {
+    margin-top: 22px;
+    max-width: 62ch;
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+  .doc-header .meta {
+    margin-top: 22px;
+    display: flex; gap: 28px; flex-wrap: wrap;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .doc-header .meta span b { color: var(--ink); font-weight: 500; }
+
+  .gallery {
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 56px 32px 80px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 56px;
+  }
+  @media (max-width: 1100px) { .gallery { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 720px)  { .gallery { grid-template-columns: 1fr; padding: 32px 16px 64px; } }
+
+  .frame-wrap { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .frame-label {
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .frame-label b {
+    display: block;
+    font-family: var(--display);
+    font-weight: 400; font-style: italic;
+    font-size: 22px; letter-spacing: -0.01em;
+    text-transform: none; color: var(--ink);
+    margin-bottom: 2px;
+  }
+
+  .phone {
+    width: 100%; max-width: 380px;
+    aspect-ratio: 380 / 800;
+    border-radius: 44px;
+    background: #0a0805;
+    padding: 8px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.08) inset,
+      0 30px 60px -20px rgba(48, 32, 18, 0.4),
+      0 12px 24px -8px rgba(48, 32, 18, 0.25);
+    position: relative;
+  }
+  .phone::before {
+    content: "";
+    position: absolute;
+    top: 14px; left: 50%; transform: translateX(-50%);
+    width: 110px; height: 28px;
+    background: #0a0805; border-radius: 18px;
+    z-index: 4;
+  }
+  .screen {
+    width: 100%; height: 100%;
+    border-radius: 36px; overflow: hidden;
+    position: relative;
+    background: var(--paper);
+  }
+  .status-bar {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 50px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 30px 0;
+    font-family: var(--mono);
+    font-size: 13px; font-weight: 600;
+    z-index: 3; pointer-events: none;
+  }
+  .status-bar .right { display: flex; gap: 6px; align-items: center; }
+  .status-bar .battery { width: 22px; height: 11px; border: 1.2px solid currentColor; border-radius: 2.5px; position: relative; }
+  .status-bar .battery::after { content: ""; position: absolute; right: -3px; top: 3px; width: 1.5px; height: 5px; background: currentColor; border-radius: 0 1px 1px 0; }
+  .status-bar .battery::before { content: ""; position: absolute; inset: 1.5px; width: calc(100% - 8px); background: currentColor; border-radius: 1px; }
+
+  .screen-inner {
+    position: absolute;
+    inset: 0;
+    padding: 50px 0 0;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+
+  /* shared */
+  .nav {
+    position: absolute;
+    bottom: 16px; left: 16px; right: 16px;
+    height: 64px;
+    background: rgba(255, 248, 230, 0.92);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--rule);
+    border-radius: 22px;
+    display: flex; align-items: center; justify-content: space-around;
+    padding: 0 8px;
+    z-index: 5;
+  }
+  .nav .item {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 3px;
+    color: var(--ink-faint);
+    font-family: var(--mono);
+    font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+  }
+  .nav .item.active { color: var(--amber); }
+  .nav .item svg { width: 22px; height: 22px; }
+
+  .h-rule {
+    margin: 26px 0 14px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .h-rule .label {
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .h-rule .line { flex: 1; height: 14px; }
+  .h-rule svg { width: 100%; height: 100%; }
+
+  .section-label {
+    margin-top: 18px;
+    display: flex; align-items: center; gap: 12px;
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .section-label::after {
+    content: ""; flex: 1; height: 1px;
+    background: repeating-linear-gradient(to right, var(--rule) 0 4px, transparent 4px 8px);
+  }
+
+  /* ============ RECIPE (data-rich) ============ */
+  .recipe { flex: 1; overflow-y: auto; }
+  .recipe .hero {
+    height: 200px;
+    background:
+      linear-gradient(180deg, transparent 50%, rgba(20, 16, 12, 0.55) 100%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 380 200'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%23c8956b'/><stop offset='0.5' stop-color='%23a07246'/><stop offset='1' stop-color='%23643f1f'/></linearGradient><filter id='n'><feTurbulence baseFrequency='1.2' numOctaves='3' seed='2'/><feColorMatrix values='0 0 0 0 0.55  0 0 0 0 0.4  0 0 0 0 0.25  0 0 0 0.4 0'/></filter></defs><rect width='380' height='200' fill='url(%23g)'/><rect width='380' height='200' filter='url(%23n)' opacity='0.5'/><g opacity='0.85'><ellipse cx='190' cy='130' rx='140' ry='38' fill='%23805029'/><path d='M70,130 Q120,60 190,60 Q260,60 310,130 Q310,150 190,150 Q70,150 70,130 Z' fill='%23a87149'/><path d='M120,110 Q140,70 190,70' stroke='%2363391b' stroke-width='3' fill='none' opacity='0.6'/><path d='M260,110 Q240,70 190,70' stroke='%2363391b' stroke-width='3' fill='none' opacity='0.6'/></g></svg>");
+    background-size: cover; background-position: center;
+    position: relative;
+  }
+  .recipe .hero .back {
+    position: absolute; top: 16px; left: 16px;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 248, 230, 0.85);
+    backdrop-filter: blur(10px);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .recipe-content { padding: 20px 22px 110px; }
+  .recipe-content .category {
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--amber);
+  }
+  .recipe-content h2 {
+    font-family: var(--display);
+    font-weight: 350;
+    font-size: 32px; line-height: 1; letter-spacing: -0.025em;
+    margin-top: 8px;
+    font-variation-settings: "opsz" 144, "SOFT" 80;
+  }
+  .recipe-content h2 em { font-style: italic; font-weight: 300; }
+
+  .equipment-chips {
+    margin-top: 12px;
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .e-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 9px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 100px;
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 0.05em;
+    color: var(--ink-soft);
+  }
+  .e-chip svg { width: 10px; height: 10px; }
+
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    margin-top: 16px;
+    padding: 12px 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .meta-grid .stat { text-align: center; }
+  .meta-grid .stat .label {
+    font-family: var(--mono);
+    font-size: 8.5px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .meta-grid .stat .val {
+    font-family: var(--display); font-size: 17px; margin-top: 3px;
+    font-variation-settings: "opsz" 60;
+  }
+  .meta-grid .stat .val em { font-style: italic; color: var(--amber); }
+
+  /* macros panel */
+  .nutrition {
+    margin-top: 16px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 14px 16px;
+  }
+  .nutrition .head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px;
+  }
+  .nutrition .head .title {
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .nutrition .toggle {
+    display: flex;
+    background: var(--cream-deep);
+    border-radius: 100px;
+    padding: 2px;
+    font-family: var(--mono);
+    font-size: 9px; letter-spacing: 0.1em;
+  }
+  .nutrition .toggle span {
+    padding: 4px 10px; border-radius: 100px;
+    color: var(--ink-faint);
+  }
+  .nutrition .toggle span.on { background: var(--ink); color: var(--cream); }
+
+  .nutrition .kcal-row {
+    display: flex; align-items: baseline; gap: 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px dotted var(--rule);
+  }
+  .nutrition .kcal-row .big {
+    font-family: var(--display);
+    font-size: 36px; font-weight: 350; line-height: 1; letter-spacing: -0.02em;
+    font-variation-settings: "opsz" 144, "SOFT" 60;
+  }
+  .nutrition .kcal-row .big em { font-style: italic; }
+  .nutrition .kcal-row .unit {
+    font-family: var(--mono);
+    font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .nutrition .kcal-row .per {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .nutrition .kcal-row .per b { color: var(--ink); font-weight: 500; }
+
+  .macros-bar {
+    margin-top: 12px;
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    display: flex;
+  }
+  .macros-bar > div { height: 100%; }
+
+  .macros {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .macro {
+    display: flex; flex-direction: column;
+    padding-top: 6px;
+  }
+  .macro .swatch {
+    width: 8px; height: 8px; border-radius: 2px;
+    margin-bottom: 4px;
+  }
+  .macro .name {
+    font-family: var(--mono);
+    font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .macro .v {
+    font-family: var(--display);
+    font-size: 17px;
+    font-variation-settings: "opsz" 60;
+  }
+  .macro .v em { font-style: italic; color: var(--ink-soft); font-size: 11px; }
+
+  .allergens {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dotted var(--rule);
+    display: flex; gap: 6px; flex-wrap: wrap;
+    align-items: center;
+  }
+  .allergens .lab {
+    font-family: var(--mono);
+    font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .a-pill {
+    padding: 3px 8px;
+    border-radius: 100px;
+    font-family: var(--mono);
+    font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+    background: #f1ddc0; color: #7c5618;
+    border: 1px solid #d8b66c;
+  }
+
+  /* cost panel */
+  .cost {
+    margin-top: 12px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .cost .left { }
+  .cost .label {
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .cost .total {
+    font-family: var(--display); font-style: italic;
+    font-size: 24px; font-weight: 400; letter-spacing: -0.015em;
+    margin-top: 2px;
+    font-variation-settings: "opsz" 144, "SOFT" 60;
+  }
+  .cost .per {
+    font-family: var(--mono);
+    font-size: 11px; letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+  .cost .breakdown { text-align: right; }
+  .cost .breakdown .row {
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    margin-bottom: 2px;
+  }
+  .cost .breakdown .row b { color: var(--ink); font-weight: 500; }
+
+  /* ratios panel */
+  .ratios {
+    margin-top: 12px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 14px 16px;
+  }
+  .ratios .head {
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 12px;
+  }
+  .ratio-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 50px;
+    gap: 10px;
+    align-items: center;
+    padding: 6px 0;
+  }
+  .ratio-row .name {
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .ratio-row .track {
+    height: 4px;
+    background: var(--cream-deep);
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+  }
+  .ratio-row .track .fill {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: var(--amber);
+    border-radius: 2px;
+  }
+  .ratio-row .val {
+    font-family: var(--mono);
+    font-size: 12px; font-weight: 500;
+    text-align: right;
+  }
+
+  /* ready-by */
+  .ready-by {
+    margin-top: 12px;
+    background: linear-gradient(135deg, #2a1d12 0%, #1a1208 100%);
+    color: var(--cream-dim);
+    border-radius: 14px;
+    padding: 14px 16px;
+    position: relative; overflow: hidden;
+  }
+  .ready-by::after {
+    content: ""; position: absolute;
+    right: -30px; top: -30px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(236, 122, 55, 0.4) 0%, transparent 70%);
+  }
+  .ready-by .head {
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--hot-amber);
+  }
+  .ready-by .row {
+    margin-top: 8px;
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .ready-by .label {
+    font-family: var(--display); font-style: italic;
+    font-size: 14px;
+    color: rgba(244, 234, 216, 0.7);
+    font-variation-settings: "opsz" 60;
+  }
+  .ready-by .time {
+    font-family: var(--mono);
+    font-size: 22px; font-weight: 500;
+    color: #fff; letter-spacing: -0.015em;
+  }
+  .ready-by .start {
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(244, 234, 216, 0.12);
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .ready-by .start .l {
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--olive-dim);
+  }
+  .ready-by .start .v {
+    font-family: var(--mono);
+    font-size: 18px; font-weight: 700; color: var(--hot-amber);
+  }
+
+  /* ============ REFLECTION screen ============ */
+  .reflection { flex: 1; overflow-y: auto; padding: 14px 24px 110px; }
+  .reflection .crumbs {
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .reflection h2 {
+    font-family: var(--display); font-weight: 350;
+    font-size: 28px; letter-spacing: -0.025em; line-height: 1;
+    margin-top: 8px;
+    font-variation-settings: "opsz" 144, "SOFT" 80;
+  }
+  .reflection h2 em { font-style: italic; color: var(--amber); }
+  .reflection .recipe-name {
+    font-family: var(--display); font-style: italic;
+    font-size: 16px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+    font-variation-settings: "opsz" 60;
+  }
+
+  .star-row {
+    margin: 22px 0 6px;
+    display: flex; gap: 12px; justify-content: center;
+    font-family: var(--display);
+    font-size: 36px; line-height: 1;
+    color: var(--amber);
+  }
+  .star-row span.dim { color: var(--rule); }
+
+  .outcome-chips {
+    margin-top: 14px;
+    display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+  }
+  .o-chip {
+    padding: 6px 12px;
+    border-radius: 100px;
+    border: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .o-chip.on { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+
+  .photo-grid {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .p-tile {
+    aspect-ratio: 1;
+    border-radius: 10px;
+    overflow: hidden;
+    background-size: cover; background-position: center;
+    position: relative;
+  }
+  .p-tile.add {
+    border: 1.5px dashed var(--rule);
+    background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-faint);
+  }
+  .p-tile .kind {
+    position: absolute; bottom: 4px; left: 4px;
+    background: rgba(20, 16, 12, 0.7);
+    color: var(--cream-dim);
+    padding: 2px 6px; border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase;
+    backdrop-filter: blur(4px);
+  }
+
+  .measure-grid {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .measure {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
+  .measure .lab {
+    font-family: var(--mono);
+    font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .measure .input {
+    margin-top: 4px;
+    display: flex; align-items: baseline; gap: 4px;
+  }
+  .measure .input .v {
+    font-family: var(--display);
+    font-size: 24px; font-weight: 400;
+    font-variation-settings: "opsz" 144, "SOFT" 60;
+  }
+  .measure .input .v em { font-style: italic; }
+  .measure .input .u {
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .measure.computed { background: linear-gradient(135deg, #f5e6c4, #ecdfc1); }
+  .measure.computed .v em { color: var(--amber); }
+
+  .slider-row {
+    margin-top: 16px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+  .slider-row + .slider-row { margin-top: 8px; }
+  .slider-row .head {
+    display: flex; justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .slider-row .head b { color: var(--amber); font-weight: 500; }
+  .slider-row .track {
+    margin-top: 8px;
+    height: 6px;
+    background: var(--cream-deep);
+    border-radius: 3px;
+    position: relative;
+  }
+  .slider-row .track .fill {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: linear-gradient(90deg, var(--olive), var(--amber));
+    border-radius: 3px;
+  }
+  .slider-row .track .knob {
+    position: absolute; top: 50%;
+    width: 18px; height: 18px;
+    background: var(--ink);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    border: 2px solid var(--cream);
+  }
+  .slider-row .ends {
+    margin-top: 6px;
+    display: flex; justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 9px; letter-spacing: 0.06em;
+    color: var(--ink-faint);
+  }
+
+  .save-btn {
+    position: absolute;
+    bottom: 96px;
+    left: 50%; transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--cream);
+    padding: 14px 32px;
+    border-radius: 100px;
+    font-family: var(--display); font-style: italic;
+    font-size: 16px;
+    box-shadow: 0 12px 24px -8px rgba(20, 16, 12, 0.4);
+    z-index: 4;
+  }
+
+  /* ============ INSIGHTS screen ============ */
+  .insights { flex: 1; overflow-y: auto; padding: 14px 22px 110px; }
+  .insights h2 {
+    font-family: var(--display); font-weight: 350;
+    font-size: 30px; letter-spacing: -0.025em; line-height: 1;
+    margin-top: 8px;
+    font-variation-settings: "opsz" 144, "SOFT" 80;
+  }
+  .insights h2 em { font-style: italic; color: var(--amber); font-weight: 300; }
+
+  .range-row {
+    margin-top: 14px;
+    display: flex; gap: 4px;
+  }
+  .r-chip {
+    flex: 1; text-align: center;
+    padding: 7px 0;
+    border: 1px solid var(--rule);
+    border-radius: 100px;
+    font-family: var(--mono);
+    font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .r-chip.on { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+
+  .stats-strip {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .ss-card {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+  .ss-card .lab {
+    font-family: var(--mono);
+    font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .ss-card .v {
+    margin-top: 4px;
+    font-family: var(--display);
+    font-size: 26px; font-weight: 400; line-height: 1;
+    letter-spacing: -0.02em;
+    font-variation-settings: "opsz" 144, "SOFT" 60;
+  }
+  .ss-card .v em { font-style: italic; }
+  .ss-card .delta {
+    margin-top: 4px;
+    font-family: var(--mono);
+    font-size: 9.5px; letter-spacing: 0.05em;
+  }
+  .delta.up { color: var(--good); }
+  .delta.down { color: var(--amber); }
+
+  .panel {
+    margin-top: 16px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 14px 16px;
+  }
+  .panel .head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .panel .head .title {
+    font-family: var(--display); font-style: italic;
+    font-size: 16px; letter-spacing: -0.005em;
+    font-variation-settings: "opsz" 60;
+  }
+  .panel .head .sub {
+    font-family: var(--mono);
+    font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* tweak ranking */
+  .tweak-rank { display: flex; flex-direction: column; gap: 4px; }
+  .tr-row {
+    display: grid;
+    grid-template-columns: 24px 1fr auto;
+    gap: 10px; align-items: center;
+    padding: 6px 0;
+  }
+  .tr-row .num {
+    font-family: var(--mono);
+    font-size: 10px; color: var(--ink-faint);
+  }
+  .tr-row .label {
+    font-family: var(--display); font-size: 14px;
+    font-variation-settings: "opsz" 24;
+  }
+  .tr-row .label em { font-style: italic; color: var(--amber); }
+  .tr-row .count {
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 0.1em;
+    color: var(--ink-soft);
+  }
+
+  /* equipment table */
+  .equip-table { display: flex; flex-direction: column; gap: 0; }
+  .eq-row {
+    display: grid;
+    grid-template-columns: 1fr auto 56px;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px dotted var(--rule);
+  }
+  .eq-row:last-child { border: none; }
+  .eq-row .name {
+    font-family: var(--display); font-size: 14px;
+    font-variation-settings: "opsz" 24;
+  }
+  .eq-row .stars {
+    color: var(--amber);
+    font-size: 11px; letter-spacing: 1px;
+  }
+  .eq-row .stars .dim { color: var(--rule); }
+  .eq-row .count {
+    font-family: var(--mono);
+    font-size: 10px; color: var(--ink-faint);
+    text-align: right;
+  }
+
+  /* rating sparkline */
+  .spark {
+    height: 60px;
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  /* heatmap */
+  .heatmap {
+    display: grid;
+    grid-template-columns: repeat(26, 1fr);
+    gap: 2px;
+    margin-top: 6px;
+  }
+  .hm-cell {
+    aspect-ratio: 1;
+    border-radius: 1px;
+    background: var(--cream-deep);
+  }
+  .hm-cell.l1 { background: #e3c992; }
+  .hm-cell.l2 { background: #d8a55c; }
+  .hm-cell.l3 { background: var(--amber); }
+  .hm-cell.l4 { background: #8a3812; }
+
+  /* =========== LEGEND =========== */
+  .legend {
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 56px 32px 96px;
+    border-top: 1px solid var(--rule);
+  }
+  .legend h2 {
+    font-family: var(--display);
+    font-weight: 350;
+    font-size: 36px; letter-spacing: -0.02em;
+    margin-bottom: 24px;
+    font-variation-settings: "opsz" 144, "SOFT" 60;
+  }
+  .legend h2 em { font-style: italic; color: var(--amber); }
+  .legend p { max-width: 70ch; line-height: 1.6; color: var(--ink-soft); margin-bottom: 24px; font-size: 16px; }
+
+  .schema-block {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .schema-block h3 {
+    font-family: var(--display); font-style: italic;
+    font-weight: 400;
+    font-size: 22px;
+    margin-bottom: 14px;
+    font-variation-settings: "opsz" 144, "SOFT" 60;
+  }
+  .schema-block pre {
+    background: var(--cream-deep);
+    border-radius: 8px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+  .schema-block pre b { color: var(--amber); font-weight: 500; }
+  .schema-block pre i { color: var(--olive); font-style: normal; }
+
+  .pri-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+  }
+  @media (max-width: 720px) { .pri-grid { grid-template-columns: 1fr; } }
+
+  .pri-block {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 20px;
+  }
+  .pri-block .tag {
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 10px;
+  }
+  .pri-block h4 {
+    font-family: var(--display); font-style: italic; font-weight: 400;
+    font-size: 18px; margin-bottom: 10px;
+    font-variation-settings: "opsz" 60;
+  }
+  .pri-block ul { list-style: none; padding: 0; }
+  .pri-block ul li {
+    padding: 4px 0;
+    font-size: 14px; line-height: 1.5;
+    color: var(--ink-soft);
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .pri-block ul li::before {
+    content: "·"; color: var(--amber); flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<header class="doc-header">
+  <div class="eyebrow">Bakebook · Frontend Design · v0.2 · Data Layer</div>
+  <h1>Macros, money, and<br/><em>the data scientist's joy</em>.</h1>
+  <p class="lede">
+    The recipe page now carries the data a serious baker actually tunes — full ratios beyond hydration, calorie and macro breakdowns per serving and per 100 g, the real cost of a loaf, allergens, and a reverse calculator that tells you when to start. The reflection screen turns each bake into a structured record. And there's a new Insights screen that surfaces the patterns hiding in the journal.
+  </p>
+  <div class="meta">
+    <span><b>+3 screens</b> Recipe (denser) · Reflection · Insights</span>
+    <span><b>+9 schema fields</b> macros, costs, outcomes</span>
+    <span><b>Same aesthetic</b> Fraunces · JetBrains Mono · cream &amp; espresso</span>
+  </div>
+</header>
+
+<section class="gallery">
+
+  <!-- ======== RECIPE (DATA-DENSE) ======== -->
+  <div class="frame-wrap">
+    <div class="phone">
+      <div class="screen">
+        <div class="status-bar">
+          <span>09:14</span>
+          <div class="right"><span style="font-size: 10px;">●●●●</span><div class="battery"></div></div>
+        </div>
+        <div class="screen-inner">
+          <div class="recipe">
+            <div class="hero">
+              <div class="back">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6L9 12L15 18"/></svg>
+              </div>
+            </div>
+            <div class="recipe-content">
+              <div class="category">Bread · Swiss · Mom's</div>
+              <h2>Swiss <em>Butterzopf</em></h2>
+
+              <div class="equipment-chips">
+                <span class="e-chip">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="6" width="18" height="14" rx="1"/><path d="M7 6V3M17 6V3M3 11H21"/></svg>
+                  Stand mixer
+                </span>
+                <span class="e-chip">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="4"/></svg>
+                  Baking tray
+                </span>
+                <span class="e-chip">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 11C5 6 9 4 12 4S19 6 19 11V14H5V11Z"/></svg>
+                  Pastry brush
+                </span>
+              </div>
+
+              <div class="meta-grid">
+                <div class="stat"><div class="label">Total</div><div class="val">4 <em>hr</em></div></div>
+                <div class="stat"><div class="label">Active</div><div class="val">35 <em>m</em></div></div>
+                <div class="stat"><div class="label">Yield</div><div class="val">8 <em>slc</em></div></div>
+                <div class="stat"><div class="label">Diff</div><div class="val">●●○○○</div></div>
+              </div>
+
+              <!-- NUTRITION -->
+              <div class="nutrition">
+                <div class="head">
+                  <span class="title">Nutrition</span>
+                  <div class="toggle">
+                    <span class="on">per slice</span>
+                    <span>per 100 g</span>
+                  </div>
+                </div>
+                <div class="kcal-row">
+                  <span class="big"><em>312</em></span>
+                  <span class="unit">kcal</span>
+                  <span class="per">of <b>2,000</b> daily · <b>16%</b></span>
+                </div>
+                <div class="macros-bar">
+                  <div style="width: 52%; background: #c08e1f;"></div>
+                  <div style="width: 28%; background: var(--amber);"></div>
+                  <div style="width: 13%; background: var(--olive);"></div>
+                  <div style="width: 7%; background: var(--ink-faint);"></div>
+                </div>
+                <div class="macros">
+                  <div class="macro">
+                    <div class="swatch" style="background: #c08e1f;"></div>
+                    <div class="name">Carbs</div>
+                    <div class="v">42<em>g</em></div>
+                  </div>
+                  <div class="macro">
+                    <div class="swatch" style="background: var(--amber);"></div>
+                    <div class="name">Fat</div>
+                    <div class="v">10<em>g</em></div>
+                  </div>
+                  <div class="macro">
+                    <div class="swatch" style="background: var(--olive);"></div>
+                    <div class="name">Protein</div>
+                    <div class="v">8<em>g</em></div>
+                  </div>
+                  <div class="macro">
+                    <div class="swatch" style="background: var(--ink-faint);"></div>
+                    <div class="name">Fiber</div>
+                    <div class="v">2<em>g</em></div>
+                  </div>
+                </div>
+                <div class="allergens">
+                  <span class="lab">Contains</span>
+                  <span class="a-pill">gluten</span>
+                  <span class="a-pill">dairy</span>
+                  <span class="a-pill">egg</span>
+                </div>
+              </div>
+
+              <!-- COST -->
+              <div class="cost">
+                <div class="left">
+                  <div class="label">Cost</div>
+                  <div class="total">CHF 2.40</div>
+                  <div class="per">≈ 0.30 / slice</div>
+                </div>
+                <div class="breakdown">
+                  <div class="row">flour <b>0.95</b></div>
+                  <div class="row">butter <b>0.78</b></div>
+                  <div class="row">milk <b>0.42</b></div>
+                  <div class="row">other <b>0.25</b></div>
+                </div>
+              </div>
+
+              <!-- RATIOS -->
+              <div class="ratios">
+                <div class="head">Baker's ratios</div>
+                <div class="ratio-row">
+                  <span class="name">Hydration</span>
+                  <div class="track"><div class="fill" style="width: 56%; background: var(--amber);"></div></div>
+                  <span class="val">56%</span>
+                </div>
+                <div class="ratio-row">
+                  <span class="name">Hyd. + dairy</span>
+                  <div class="track"><div class="fill" style="width: 72%; background: var(--blush);"></div></div>
+                  <span class="val">72%</span>
+                </div>
+                <div class="ratio-row">
+                  <span class="name">Fat</span>
+                  <div class="track"><div class="fill" style="width: 16%; background: var(--olive);"></div></div>
+                  <span class="val">16%</span>
+                </div>
+                <div class="ratio-row">
+                  <span class="name">Sugar</span>
+                  <div class="track"><div class="fill" style="width: 3%; background: #c08e1f;"></div></div>
+                  <span class="val">3%</span>
+                </div>
+                <div class="ratio-row">
+                  <span class="name">Salt</span>
+                  <div class="track"><div class="fill" style="width: 18%; background: var(--ink-faint);"></div></div>
+                  <span class="val">2%</span>
+                </div>
+                <div class="ratio-row">
+                  <span class="name">Yeast</span>
+                  <div class="track"><div class="fill" style="width: 24%; background: #4a7d3d;"></div></div>
+                  <span class="val">3%</span>
+                </div>
+              </div>
+
+              <!-- READY BY -->
+              <div class="ready-by">
+                <div class="head">Ready by</div>
+                <div class="row">
+                  <span class="label">Out of oven</span>
+                  <span class="time">09:00</span>
+                </div>
+                <div class="start">
+                  <span class="l">Start at</span>
+                  <span class="v">04:30</span>
+                </div>
+              </div>
+
+              <div class="h-rule">
+                <span class="label">Ingredients</span>
+                <div class="line">
+                  <svg viewBox="0 0 200 14" preserveAspectRatio="none"><path d="M0,7 Q40,3 80,8 T160,7 T200,8" stroke="#b8a98c" stroke-width="1" fill="none" stroke-linecap="round"/></svg>
+                </div>
+              </div>
+
+              <div style="font-family: var(--mono); font-size: 11px; color: var(--ink-faint); letter-spacing: 0.1em; padding: 4px 0;">… and so on as before, with grams + role + baker's %</div>
+            </div>
+          </div>
+
+          <nav class="nav">
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12L12 4L21 12V20H15V14H9V20H3V12Z"/></svg>
+              Home
+            </div>
+            <div class="item active">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4H17C18 4 19 5 19 6V20L12 17L5 20V6C5 5 6 4 7 4H5Z"/></svg>
+              Recipes
+            </div>
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><path d="M12 8V12L14.5 14"/></svg>
+              Journal
+            </div>
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12 L9 12 L11 6 L13 18 L15 12 L21 12"/></svg>
+              Insights
+            </div>
+          </nav>
+        </div>
+      </div>
+    </div>
+    <div class="frame-label"><b>Recipe, denser</b>macros · cost · ratios · ready-by</div>
+  </div>
+
+  <!-- ======== REFLECTION ======== -->
+  <div class="frame-wrap">
+    <div class="phone">
+      <div class="screen">
+        <div class="status-bar">
+          <span>11:42</span>
+          <div class="right"><span style="font-size: 10px;">●●●●</span><div class="battery"></div></div>
+        </div>
+        <div class="screen-inner">
+          <div class="reflection">
+            <div class="crumbs">Bake · 8 nov · 34 min</div>
+            <h2>How did <em>it go</em>?</h2>
+            <div class="recipe-name">Buttermilk cornbread, 4th bake</div>
+
+            <div class="star-row">
+              <span>★</span><span>★</span><span>★</span><span>★</span><span class="dim">★</span>
+            </div>
+
+            <div class="outcome-chips">
+              <span class="o-chip">Disaster</span>
+              <span class="o-chip">Meh</span>
+              <span class="o-chip">Okay</span>
+              <span class="o-chip on">Good</span>
+              <span class="o-chip">Best yet</span>
+            </div>
+
+            <div class="section-label">Photos</div>
+            <div class="photo-grid">
+              <div class="p-tile" style="background: linear-gradient(135deg, #c48a52, #5e3618);"><span class="kind">Final</span></div>
+              <div class="p-tile" style="background: linear-gradient(135deg, #d8a55c, #a06d2c);"><span class="kind">Crumb</span></div>
+              <div class="p-tile" style="background: linear-gradient(135deg, #c48555, #6f4222);"><span class="kind">Side</span></div>
+              <div class="p-tile add">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path d="M12 5V19M5 12H19"/></svg>
+              </div>
+            </div>
+
+            <div class="section-label">Measurements</div>
+            <div class="measure-grid">
+              <div class="measure">
+                <div class="lab">Rise (cm)</div>
+                <div class="input">
+                  <span class="v">5.2</span>
+                  <span class="u">cm</span>
+                </div>
+              </div>
+              <div class="measure">
+                <div class="lab">Internal temp</div>
+                <div class="input">
+                  <span class="v">96</span>
+                  <span class="u">°C</span>
+                </div>
+              </div>
+              <div class="measure">
+                <div class="lab">Weight before</div>
+                <div class="input">
+                  <span class="v">920</span>
+                  <span class="u">g</span>
+                </div>
+              </div>
+              <div class="measure">
+                <div class="lab">Weight after</div>
+                <div class="input">
+                  <span class="v">812</span>
+                  <span class="u">g</span>
+                </div>
+              </div>
+              <div class="measure computed">
+                <div class="lab">Water loss</div>
+                <div class="input">
+                  <span class="v"><em>11.7%</em></span>
+                </div>
+              </div>
+              <div class="measure computed">
+                <div class="lab">Oven spring</div>
+                <div class="input">
+                  <span class="v"><em>+18%</em></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="slider-row">
+              <div class="head">
+                <span>Crumb structure</span>
+                <span><b>open</b></span>
+              </div>
+              <div class="track">
+                <div class="fill" style="width: 78%;"></div>
+                <div class="knob" style="left: 78%;"></div>
+              </div>
+              <div class="ends">
+                <span>tight</span>
+                <span>open</span>
+              </div>
+            </div>
+
+            <div class="slider-row">
+              <div class="head">
+                <span>Crust</span>
+                <span><b>blistered</b></span>
+              </div>
+              <div class="track">
+                <div class="fill" style="width: 90%;"></div>
+                <div class="knob" style="left: 90%;"></div>
+              </div>
+              <div class="ends">
+                <span>pale</span>
+                <span>blistered</span>
+              </div>
+            </div>
+
+            <div class="section-label">Tweaks logged</div>
+            <div style="margin-top: 8px; padding: 12px 14px; background: #f5e6c4; border: 1px solid #d8b66c; border-radius: 12px;">
+              <div style="font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #8a6915;">2 carried from the bake</div>
+              <div style="margin-top: 8px; font-size: 13px; line-height: 1.45;">
+                → Use room-temp buttermilk next time<br/>
+                → +5 min preheat for skillet
+              </div>
+            </div>
+          </div>
+
+          <div class="save-btn">Save &amp; finish</div>
+
+          <nav class="nav">
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12L12 4L21 12V20H15V14H9V20H3V12Z"/></svg>
+              Home
+            </div>
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4H17C18 4 19 5 19 6V20L12 17L5 20V6C5 5 6 4 7 4H5Z"/></svg>
+              Recipes
+            </div>
+            <div class="item active">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><path d="M12 8V12L14.5 14"/></svg>
+              Journal
+            </div>
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12 L9 12 L11 6 L13 18 L15 12 L21 12"/></svg>
+              Insights
+            </div>
+          </nav>
+        </div>
+      </div>
+    </div>
+    <div class="frame-label"><b>Reflection</b>turns each bake into structured data</div>
+  </div>
+
+  <!-- ======== INSIGHTS ======== -->
+  <div class="frame-wrap">
+    <div class="phone">
+      <div class="screen">
+        <div class="status-bar">
+          <span>20:24</span>
+          <div class="right"><span style="font-size: 10px;">●●●●</span><div class="battery"></div></div>
+        </div>
+        <div class="screen-inner">
+          <div class="insights">
+            <h2>Insights, <em>2025</em></h2>
+
+            <div class="range-row">
+              <span class="r-chip">Month</span>
+              <span class="r-chip on">Year</span>
+              <span class="r-chip">All time</span>
+            </div>
+
+            <div class="stats-strip">
+              <div class="ss-card">
+                <div class="lab">Bakes</div>
+                <div class="v"><em>87</em></div>
+                <div class="delta up">↑ 12 vs last yr</div>
+              </div>
+              <div class="ss-card">
+                <div class="lab">Avg rating</div>
+                <div class="v">4.3<em>★</em></div>
+                <div class="delta up">↑ 0.4</div>
+              </div>
+              <div class="ss-card">
+                <div class="lab">Flour used</div>
+                <div class="v">142 <em>kg</em></div>
+                <div class="delta">~2.7 kg / wk</div>
+              </div>
+              <div class="ss-card">
+                <div class="lab">Spent</div>
+                <div class="v">CHF <em>684</em></div>
+                <div class="delta">vs ~1,400 store</div>
+              </div>
+            </div>
+
+            <!-- bakes per month bar chart -->
+            <div class="panel">
+              <div class="head">
+                <span class="title">Bakes per month</span>
+                <span class="sub">12 mo</span>
+              </div>
+              <svg viewBox="0 0 320 100" width="100%" height="100" preserveAspectRatio="none">
+                <g fill="var(--amber)">
+                  <rect x="0"   y="60" width="22" height="40" rx="2"/>
+                  <rect x="27"  y="50" width="22" height="50" rx="2"/>
+                  <rect x="54"  y="68" width="22" height="32" rx="2"/>
+                  <rect x="81"  y="40" width="22" height="60" rx="2"/>
+                  <rect x="108" y="55" width="22" height="45" rx="2"/>
+                  <rect x="135" y="72" width="22" height="28" rx="2"/>
+                  <rect x="162" y="80" width="22" height="20" rx="2" opacity="0.5"/>
+                  <rect x="189" y="65" width="22" height="35" rx="2"/>
+                  <rect x="216" y="35" width="22" height="65" rx="2"/>
+                  <rect x="243" y="22" width="22" height="78" rx="2"/>
+                  <rect x="270" y="30" width="22" height="70" rx="2" opacity="0.85"/>
+                  <rect x="297" y="55" width="22" height="45" rx="2" fill="#d96826"/>
+                </g>
+                <g font-family="JetBrains Mono" font-size="7" fill="var(--ink-faint)" letter-spacing="1">
+                  <text x="11" y="100" text-anchor="middle" dy="-2" fill="var(--paper)">D</text>
+                </g>
+              </svg>
+              <div style="display: grid; grid-template-columns: repeat(12, 1fr); font-family: var(--mono); font-size: 8px; color: var(--ink-faint); margin-top: 4px; letter-spacing: 0.05em;">
+                <span style="text-align:center">D</span><span style="text-align:center">J</span><span style="text-align:center">F</span><span style="text-align:center">M</span><span style="text-align:center">A</span><span style="text-align:center">M</span><span style="text-align:center">J</span><span style="text-align:center">J</span><span style="text-align:center">A</span><span style="text-align:center">S</span><span style="text-align:center">O</span><span style="text-align:center; color: var(--amber)">N</span>
+              </div>
+            </div>
+
+            <!-- top tweaks -->
+            <div class="panel">
+              <div class="head">
+                <span class="title">Top tweaks</span>
+                <span class="sub">across all bakes</span>
+              </div>
+              <div class="tweak-rank">
+                <div class="tr-row">
+                  <span class="num">01</span>
+                  <span class="label">Add <em>+10 g water</em></span>
+                  <span class="count">9×</span>
+                </div>
+                <div class="tr-row">
+                  <span class="num">02</span>
+                  <span class="label">Reduce bake time <em>−3 min</em></span>
+                  <span class="count">7×</span>
+                </div>
+                <div class="tr-row">
+                  <span class="num">03</span>
+                  <span class="label">Longer cold ferment</span>
+                  <span class="count">5×</span>
+                </div>
+                <div class="tr-row">
+                  <span class="num">04</span>
+                  <span class="label">More salt</span>
+                  <span class="count">4×</span>
+                </div>
+              </div>
+              <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dotted var(--rule); font-size: 12.5px; line-height: 1.5; color: var(--ink-soft); font-style: italic; font-family: var(--display); font-variation-settings: 'opsz' 24;">
+                Pattern: you systematically over-bake and under-hydrate. Worth nudging defaults.
+              </div>
+            </div>
+
+            <!-- equipment leaderboard -->
+            <div class="panel">
+              <div class="head">
+                <span class="title">Equipment</span>
+                <span class="sub">avg rating</span>
+              </div>
+              <div class="equip-table">
+                <div class="eq-row">
+                  <span class="name">Cast iron skillet</span>
+                  <span class="stars">★★★★★</span>
+                  <span class="count">12 bk</span>
+                </div>
+                <div class="eq-row">
+                  <span class="name">Dutch oven</span>
+                  <span class="stars">★★★★<span class="dim">★</span></span>
+                  <span class="count">8 bk</span>
+                </div>
+                <div class="eq-row">
+                  <span class="name">Loaf pan</span>
+                  <span class="stars">★★★★<span class="dim">★</span></span>
+                  <span class="count">14 bk</span>
+                </div>
+                <div class="eq-row">
+                  <span class="name">Ooni Koda 2</span>
+                  <span class="stars">★★★<span class="dim">★★</span></span>
+                  <span class="count">22 bk</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- heatmap -->
+            <div class="panel">
+              <div class="head">
+                <span class="title">Baking calendar</span>
+                <span class="sub">2025</span>
+              </div>
+              <div class="heatmap">
+                <!-- 26 cols x 4 rows = ~52 weeks compact -->
+                <div class="hm-cell"></div><div class="hm-cell l1"></div><div class="hm-cell"></div><div class="hm-cell l2"></div><div class="hm-cell l1"></div><div class="hm-cell"></div><div class="hm-cell l1"></div><div class="hm-cell l3"></div><div class="hm-cell l2"></div><div class="hm-cell"></div><div class="hm-cell l1"></div><div class="hm-cell l2"></div><div class="hm-cell l3"></div><div class="hm-cell l4"></div><div class="hm-cell l2"></div><div class="hm-cell l1"></div><div class="hm-cell"></div><div class="hm-cell l1"></div><div class="hm-cell l2"></div><div class="hm-cell"></div><div class="hm-cell l3"></div><div class="hm-cell l2"></div><div class="hm-cell l1"></div><div class="hm-cell l4"></div><div class="hm-cell l3"></div><div class="hm-cell l2"></div>
+                <div class="hm-cell l1"></div><div class="hm-cell"></div><div class="hm-cell l2"></div><div class="hm-cell l3"></div><div class="hm-cell"></div><div class="hm-cell l1"></div><div class="hm-cell l2"></div><div class="hm-cell l1"></div><div class="hm-cell"></div><div class="hm-cell l3"></div><div class="hm-cell l2"></div><div class="hm-cell l1"></div><div class="hm-cell"></div><div class="hm-cell l2"></div><div class="hm-cell l1"></div><div class="hm-cell l3"></div><div class="hm-cell l4"></div><div class="hm-cell l2"></div><div class="hm-cell"></div><div class="hm-cell l1"></div><div class="hm-cell l2"></div><div class="hm-cell l3"></div><div class="hm-cell l4"></div><div class="hm-cell l3"></div><div class="hm-cell l2"></div><div class="hm-cell l1"></div>
+                <div class="hm-cell"></div><div class="hm-cell l2"></div><div class="hm-cell l1"></div><div class="hm-cell"></div><div class="hm-cell l3"></div><div class="hm-cell l2"></div><div class="hm-cell"></div><div class="hm-cell l1"></div><div class="hm-cell l2"></div><div class="hm-cell"></div><div class="hm-cell l3"></div><div class="hm-cell l4"></div><div class="hm-cell l2"></div><div class="hm-cell l1"></div><div class="hm-cell l3"></div><div class="hm-cell"></div><div class="hm-cell l2"></div><div class="hm-cell l3"></div><div class="hm-cell l4"></div><div class="hm-cell l3"></div><div class="hm-cell l2"></div><div class="hm-cell l1"></div><div class="hm-cell"></div><div class="hm-cell l2"></div><div class="hm-cell l3"></div><div class="hm-cell l4"></div>
+              </div>
+              <div style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center; font-family: var(--mono); font-size: 9px; color: var(--ink-faint); letter-spacing: 0.1em;">
+                <span>Jan</span>
+                <div style="display: flex; gap: 2px; align-items: center;">
+                  <span>less</span>
+                  <div class="hm-cell" style="width: 8px; height: 8px;"></div>
+                  <div class="hm-cell l1" style="width: 8px; height: 8px;"></div>
+                  <div class="hm-cell l2" style="width: 8px; height: 8px;"></div>
+                  <div class="hm-cell l3" style="width: 8px; height: 8px;"></div>
+                  <div class="hm-cell l4" style="width: 8px; height: 8px;"></div>
+                  <span>more</span>
+                </div>
+                <span>Dec</span>
+              </div>
+            </div>
+          </div>
+
+          <nav class="nav">
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12L12 4L21 12V20H15V14H9V20H3V12Z"/></svg>
+              Home
+            </div>
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4H17C18 4 19 5 19 6V20L12 17L5 20V6C5 5 6 4 7 4H5Z"/></svg>
+              Recipes
+            </div>
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><path d="M12 8V12L14.5 14"/></svg>
+              Journal
+            </div>
+            <div class="item active">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12 L9 12 L11 6 L13 18 L15 12 L21 12"/></svg>
+              Insights
+            </div>
+          </nav>
+        </div>
+      </div>
+    </div>
+    <div class="frame-label"><b>Insights</b>where the data scientist gets paid back</div>
+  </div>
+
+</section>
+
+<section class="legend">
+  <h2>What's <em>different</em>, in code</h2>
+  <p>
+    Three new screens, plus changes to the existing journal and home (small stats strips). The schema needs nine new fields and one bundled JSON file (per-100 g nutrition for ~80 baking ingredients, derived once from USDA FoodData Central, shipped with the app — no external API call at runtime).
+  </p>
+
+  <div class="schema-block">
+    <h3>Schema deltas</h3>
+    <pre>-- recipes: add a real number for serving math
+ALTER TABLE recipes ADD COLUMN <b>servings</b> INT DEFAULT 1;
+ALTER TABLE recipes ADD COLUMN <b>serving_g</b> NUMERIC(7,2);   <i>-- weight per slice/portion</i>
+
+-- pantry items hold default cost + nutrition refs
+CREATE TABLE <b>pantry_items</b> (
+  id              UUID PRIMARY KEY,
+  name            TEXT UNIQUE NOT NULL,         <i>-- 'Zopfmehl', 'Bread flour'</i>
+  cost_per_kg     NUMERIC(7,2),                  <i>-- CHF</i>
+  cost_currency   TEXT DEFAULT 'CHF',
+  nutrition_ref   TEXT,                          <i>-- key into bundled JSON</i>
+  default_role    TEXT,
+  created_at      TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE <b>pantry_price_history</b> (
+  id              UUID PRIMARY KEY,
+  pantry_item_id  UUID REFERENCES pantry_items(id),
+  cost_per_kg     NUMERIC(7,2) NOT NULL,
+  observed_at     TIMESTAMPTZ DEFAULT now(),
+  source          TEXT                            <i>-- 'manual' | 'migros' | 'coop'</i>
+);
+
+-- recipe_ingredients can override the pantry default
+ALTER TABLE recipe_ingredients ADD COLUMN <b>pantry_item_id</b> UUID REFERENCES pantry_items(id);
+ALTER TABLE recipe_ingredients ADD COLUMN <b>cost_override_per_kg</b> NUMERIC(7,2);
+ALTER TABLE recipe_ingredients ADD COLUMN <b>nutrition_override</b> JSONB;
+                  <i>-- { kcal, protein, fat, carbs, sugar, fiber, salt }, all per 100 g</i>
+
+-- bakes: structured outcomes
+ALTER TABLE bakes ADD COLUMN <b>kitchen_temp_c</b>    NUMERIC(4,1);
+ALTER TABLE bakes ADD COLUMN <b>kitchen_humidity</b>  NUMERIC(4,1);
+ALTER TABLE bakes ADD COLUMN <b>final_weight_g</b>    NUMERIC(7,2);
+ALTER TABLE bakes ADD COLUMN <b>start_weight_g</b>    NUMERIC(7,2);
+ALTER TABLE bakes ADD COLUMN <b>rise_height_cm</b>    NUMERIC(4,1);
+ALTER TABLE bakes ADD COLUMN <b>internal_temp_c</b>   NUMERIC(4,1);
+ALTER TABLE bakes ADD COLUMN <b>crumb_score</b>       INT CHECK (crumb_score BETWEEN 1 AND 5);
+ALTER TABLE bakes ADD COLUMN <b>crust_score</b>       INT CHECK (crust_score BETWEEN 1 AND 5);
+                  <i>-- water_loss_pct and oven_spring_pct are computed views, not columns</i>
+
+-- recipes: ratios are all computed; only one new column needed
+ALTER TABLE recipes ADD COLUMN <b>target_dough_g</b>  NUMERIC(7,2);   <i>-- nullable; for "scale to" mode</i></pre>
+  </div>
+
+  <div class="pri-grid">
+    <div class="pri-block">
+      <span class="tag">Tier 1 · ship in M3</span>
+      <h4>Confirmed for v1</h4>
+      <ul>
+        <li>Macros (per serving + per 100 g) with bundled USDA-derived JSON</li>
+        <li>Cost per recipe + per serving, with default <code>cost_per_kg</code> on pantry items</li>
+        <li>Full baker's ratios — hydration, fat, sugar, salt, leaven, prefermented flour</li>
+        <li>Allergen badges (auto-derived from ingredients with manual override)</li>
+        <li>Ready-by reverse calculator</li>
+        <li>Environmental context capture at bake start (kitchen temp, optional humidity)</li>
+        <li>Structured outcome capture on the reflection screen</li>
+      </ul>
+    </div>
+
+    <div class="pri-block">
+      <span class="tag">Tier 2 · ship in M4 or M5</span>
+      <h4>The Insights screen</h4>
+      <ul>
+        <li>Bakes per month bar chart, year-on-year</li>
+        <li>Top tweaks ranked across all bakes</li>
+        <li>Equipment success rates</li>
+        <li>Calendar heatmap, GitHub-style</li>
+        <li>Stats strip: total bakes, avg rating, flour used, money spent</li>
+        <li>"Pattern" callouts written by hand: surface signals from the tweaks data</li>
+      </ul>
+    </div>
+
+    <div class="pri-block">
+      <span class="tag">Tier 3 · earned, after 30+ bakes</span>
+      <h4>Stats that need data</h4>
+      <ul>
+        <li>Hydration vs rating scatter plot</li>
+        <li>Bake time vs water-loss-% correlation</li>
+        <li>Kitchen-temp vs proof-time fit</li>
+        <li>Per-ingredient price history charts</li>
+        <li>Recipe-style fingerprint (lean / enriched / wet / dry coordinates)</li>
+      </ul>
+    </div>
+
+    <div class="pri-block">
+      <span class="tag">Defer · v2</span>
+      <h4>Worth thinking about, not now</h4>
+      <ul>
+        <li>Pantry inventory tracking with restock alerts</li>
+        <li>Calendar sync to Google Calendar</li>
+        <li>Print / PDF export of recipe cards</li>
+        <li>Read-only share links</li>
+        <li>Starter strain genealogy &amp; multiple starters</li>
+        <li>Score-pattern annotation tools</li>
+        <li>"Baked for X" tags with allergen guards</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

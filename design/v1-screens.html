@@ -1,0 +1,1293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Bakebook — Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..900,0..100&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #f4ead4;
+    --cream-deep: #ecdfc1;
+    --paper: #f8f1dd;
+    --ink: #1d1410;
+    --ink-soft: #4a3a30;
+    --ink-faint: #8a7a6c;
+    --amber: #b8501f;
+    --amber-bright: #d96826;
+    --olive: #6b6939;
+    --blush: #d8a892;
+    --rule: #b8a98c;
+
+    --espresso: #14100c;
+    --espresso-2: #1e1813;
+    --cream-dim: #e9dcc1;
+    --hot-amber: #ec7a37;
+    --hot-amber-glow: rgba(236, 122, 55, 0.18);
+    --olive-dim: #9a956a;
+
+    --display: "Fraunces", ui-serif, Georgia, serif;
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: var(--display);
+    font-feature-settings: "ss01", "ss02";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Paper grain background */
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    pointer-events: none;
+    opacity: 0.5;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='4'/><feColorMatrix values='0 0 0 0 0.45  0 0 0 0 0.36  0 0 0 0 0.26  0 0 0 0.18 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    z-index: 1000;
+  }
+
+  .doc-header {
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 56px 32px 24px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .doc-header .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 18px;
+  }
+  .doc-header h1 {
+    font-family: var(--display);
+    font-weight: 350;
+    font-size: clamp(40px, 6vw, 84px);
+    letter-spacing: -0.025em;
+    line-height: 0.95;
+    font-variation-settings: "opsz" 144, "SOFT" 100;
+  }
+  .doc-header h1 em {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--amber);
+  }
+  .doc-header .lede {
+    margin-top: 22px;
+    max-width: 62ch;
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+  .doc-header .meta {
+    margin-top: 22px;
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .doc-header .meta span b { color: var(--ink); font-weight: 500; }
+
+  .gallery {
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 56px 32px 80px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 36px;
+  }
+  @media (max-width: 1280px) { .gallery { grid-template-columns: repeat(2, 1fr); gap: 48px; } }
+  @media (max-width: 720px)  { .gallery { grid-template-columns: 1fr; gap: 56px; padding: 32px 16px 64px; } }
+
+  .frame-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .frame-label {
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .frame-label b {
+    display: block;
+    font-family: var(--display);
+    font-weight: 400;
+    font-style: italic;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    text-transform: none;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+
+  /* Phone bezel */
+  .phone {
+    width: 100%;
+    max-width: 380px;
+    aspect-ratio: 380 / 800;
+    border-radius: 44px;
+    background: #0a0805;
+    padding: 8px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.08) inset,
+      0 30px 60px -20px rgba(48, 32, 18, 0.4),
+      0 12px 24px -8px rgba(48, 32, 18, 0.25);
+    position: relative;
+  }
+  .phone::before { /* notch */
+    content: "";
+    position: absolute;
+    top: 14px; left: 50%; transform: translateX(-50%);
+    width: 110px; height: 28px;
+    background: #0a0805;
+    border-radius: 18px;
+    z-index: 4;
+  }
+  .screen {
+    width: 100%; height: 100%;
+    border-radius: 36px;
+    overflow: hidden;
+    position: relative;
+    background: var(--paper);
+  }
+  .status-bar {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 30px 0;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .status-bar.dark { color: var(--cream-dim); }
+  .status-bar .right { display: flex; gap: 6px; align-items: center; }
+  .status-bar .battery { width: 22px; height: 11px; border: 1.2px solid currentColor; border-radius: 2.5px; position: relative; }
+  .status-bar .battery::after { content: ""; position: absolute; right: -3px; top: 3px; width: 1.5px; height: 5px; background: currentColor; border-radius: 0 1px 1px 0; }
+  .status-bar .battery::before { content: ""; position: absolute; inset: 1.5px; width: calc(100% - 8px); background: currentColor; border-radius: 1px; }
+
+  .screen-inner {
+    position: absolute;
+    inset: 0;
+    padding: 50px 0 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ---------- shared chrome ---------- */
+  .nav {
+    position: absolute;
+    bottom: 16px;
+    left: 16px; right: 16px;
+    height: 64px;
+    background: rgba(255, 248, 230, 0.92);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--rule);
+    border-radius: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 8px;
+    z-index: 5;
+  }
+  .nav .item {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 3px;
+    color: var(--ink-faint);
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .nav .item.active { color: var(--amber); }
+  .nav .item svg { width: 22px; height: 22px; }
+
+  /* ---------- HOME screen ---------- */
+  .home { padding: 16px 24px 96px; overflow-y: auto; flex: 1; }
+  .home .hello {
+    font-size: 30px;
+    font-weight: 350;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin-top: 6px;
+    font-variation-settings: "opsz" 144, "SOFT" 60;
+  }
+  .home .hello em { font-style: italic; color: var(--amber); font-weight: 300; }
+  .home .date {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-top: 10px;
+  }
+
+  .active-bake-card {
+    margin-top: 22px;
+    background: linear-gradient(150deg, #2a1d12 0%, #1a1208 100%);
+    color: var(--cream-dim);
+    border-radius: 20px;
+    padding: 18px 18px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .active-bake-card::after {
+    content: ""; position: absolute;
+    right: -40px; top: -40px;
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(236, 122, 55, 0.4) 0%, transparent 70%);
+  }
+  .active-bake-card .tag {
+    font-family: var(--mono);
+    font-size: 9px; letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--hot-amber);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .active-bake-card .tag .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--hot-amber); animation: pulse 1.6s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .active-bake-card .title {
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: -0.015em;
+    margin-top: 6px;
+    font-style: italic;
+  }
+  .active-bake-card .step { font-size: 12px; color: rgba(244, 234, 216, 0.6); margin-top: 4px; font-family: var(--mono); }
+  .active-bake-card .timer { font-family: var(--mono); font-size: 28px; font-weight: 500; letter-spacing: -0.01em; margin-top: 12px; color: #fff; }
+
+  .section-label {
+    margin-top: 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .section-label::after {
+    content: ""; flex: 1; height: 1px;
+    background: repeating-linear-gradient(to right, var(--rule) 0 4px, transparent 4px 8px);
+  }
+
+  .pinned {
+    margin-top: 14px;
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .pinned::-webkit-scrollbar { display: none; }
+  .recipe-card {
+    flex: 0 0 160px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+  }
+  .recipe-card .img {
+    height: 110px;
+    background-size: cover;
+    background-position: center;
+  }
+  .recipe-card .body { padding: 10px 12px 12px; }
+  .recipe-card .body .name { font-size: 15px; line-height: 1.15; letter-spacing: -0.01em; font-variation-settings: "opsz" 60; }
+  .recipe-card .body .meta {
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .recents { margin-top: 14px; display: flex; flex-direction: column; gap: 0; }
+  .recent-row {
+    display: flex; gap: 12px; align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .recent-row .thumb {
+    width: 48px; height: 48px;
+    border-radius: 10px;
+    background-size: cover; background-position: center;
+    flex-shrink: 0;
+  }
+  .recent-row .info { flex: 1; min-width: 0; }
+  .recent-row .info .name { font-size: 15px; letter-spacing: -0.01em; }
+  .recent-row .info .sub { font-family: var(--mono); font-size: 10px; color: var(--ink-faint); margin-top: 2px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .recent-row .stars { font-family: var(--display); color: var(--amber); font-size: 13px; letter-spacing: 1px; }
+
+  /* ---------- RECIPE screen ---------- */
+  .recipe { flex: 1; overflow-y: auto; }
+  .recipe .hero {
+    height: 240px;
+    background:
+      linear-gradient(180deg, transparent 50%, rgba(20, 16, 12, 0.55) 100%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 380 240'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%23c8956b'/><stop offset='0.5' stop-color='%23a07246'/><stop offset='1' stop-color='%23643f1f'/></linearGradient><filter id='n'><feTurbulence baseFrequency='1.2' numOctaves='3' seed='2'/><feColorMatrix values='0 0 0 0 0.55  0 0 0 0 0.4  0 0 0 0 0.25  0 0 0 0.4 0'/></filter></defs><rect width='380' height='240' fill='url(%23g)'/><rect width='380' height='240' filter='url(%23n)' opacity='0.5'/><g opacity='0.85'><ellipse cx='190' cy='160' rx='140' ry='40' fill='%23805029'/><path d='M70,160 Q120,90 190,90 Q260,90 310,160 Q310,180 190,180 Q70,180 70,160 Z' fill='%23a87149'/><path d='M120,140 Q140,100 190,100' stroke='%2363391b' stroke-width='3' fill='none' opacity='0.6'/><path d='M260,140 Q240,100 190,100' stroke='%2363391b' stroke-width='3' fill='none' opacity='0.6'/><path d='M150,150 Q190,120 230,150' stroke='%2363391b' stroke-width='2.5' fill='none' opacity='0.5'/></g></svg>");
+    background-size: cover;
+    background-position: center;
+    position: relative;
+  }
+  .recipe .hero .back {
+    position: absolute;
+    top: 16px; left: 16px;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 248, 230, 0.85);
+    backdrop-filter: blur(10px);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .recipe-content { padding: 24px 24px 110px; }
+  .recipe-content .category {
+    font-family: var(--mono);
+    font-size: 10px; letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--amber);
+  }
+  .recipe-content h2 {
+    font-family: var(--display);
+    font-weight: 350;
+    font-size: 36px;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    margin-top: 8px;
+    font-variation-settings: "opsz" 144, "SOFT" 80;
+  }
+  .recipe-content h2 em { font-style: italic; font-weight: 300; }
+  .recipe-content .summary { color: var(--ink-soft); margin-top: 12px; line-height: 1.5; font-size: 14.5px; }
+  .recipe-content .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 18px;
+    padding: 14px 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .recipe-content .stat .label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-faint); }
+  .recipe-content .stat .val { font-family: var(--display); font-size: 18px; margin-top: 3px; font-variation-settings: "opsz" 60; }
+  .recipe-content .stat .val em { font-style: italic; }
+
+  .tweak-banner {
+    margin-top: 18px;
+    background: #f5e6c4;
+    border: 1px solid #d8b66c;
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .tweak-banner .icon { font-size: 18px; line-height: 1; margin-top: 2px; }
+  .tweak-banner .content { flex: 1; }
+  .tweak-banner .heading { font-family: var(--mono); font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: #8a6915; }
+  .tweak-banner .body { margin-top: 4px; font-size: 13.5px; line-height: 1.4; color: var(--ink); }
+  .tweak-banner .body em { font-style: italic; }
+  .tweak-banner .apply {
+    display: inline-block;
+    margin-top: 8px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--amber);
+    border-bottom: 1px solid var(--amber);
+    padding-bottom: 1px;
+  }
+
+  .h-rule {
+    margin: 26px 0 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .h-rule .label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--ink-faint); }
+  .h-rule .line {
+    flex: 1;
+    height: 14px;
+  }
+  .h-rule svg { width: 100%; height: 100%; }
+
+  .ingredients { display: flex; flex-direction: column; gap: 0; }
+  .ing-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 10px;
+    align-items: baseline;
+    padding: 9px 0;
+    border-bottom: 1px dotted var(--rule);
+    font-size: 14.5px;
+  }
+  .ing-row .name { letter-spacing: -0.005em; }
+  .ing-row .name .role { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); margin-left: 6px; }
+  .ing-row .grams { font-family: var(--mono); font-size: 13px; font-weight: 500; }
+  .ing-row .pct { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); min-width: 44px; text-align: right; }
+  .ing-row .pct b { color: var(--amber); font-weight: 500; }
+
+  .hydration {
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .hydration b { color: var(--amber); font-weight: 500; }
+
+  .start-fab {
+    position: absolute;
+    bottom: 96px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--cream);
+    padding: 14px 28px;
+    border-radius: 100px;
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 16px;
+    letter-spacing: -0.005em;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 12px 24px -8px rgba(20, 16, 12, 0.4);
+    z-index: 4;
+  }
+  .start-fab svg { width: 16px; height: 16px; }
+
+  /* ---------- ACTIVE BAKE screen ---------- */
+  .bake-screen { background: var(--espresso); color: var(--cream-dim); padding: 50px 0 0; flex: 1; display: flex; flex-direction: column; }
+  .bake-screen::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 50% 30%, var(--hot-amber-glow), transparent 60%),
+      radial-gradient(ellipse at 30% 80%, rgba(154, 149, 106, 0.08), transparent 50%);
+    pointer-events: none;
+  }
+  .bake-header {
+    padding: 16px 24px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(244, 234, 216, 0.55);
+    border-bottom: 1px solid rgba(244, 234, 216, 0.08);
+    position: relative;
+    z-index: 2;
+  }
+  .bake-header .step-name { color: var(--cream-dim); }
+  .bake-header .progress {
+    display: flex; gap: 4px;
+  }
+  .bake-header .progress span {
+    display: block; width: 14px; height: 2px; background: rgba(244, 234, 216, 0.18); border-radius: 1px;
+  }
+  .bake-header .progress span.done { background: var(--olive-dim); }
+  .bake-header .progress span.current { background: var(--hot-amber); }
+
+  .timer-block {
+    padding: 36px 24px 24px;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+  }
+  .timer-block .label {
+    font-family: var(--display);
+    font-style: italic;
+    font-weight: 300;
+    font-size: 14px;
+    letter-spacing: -0.005em;
+    color: rgba(244, 234, 216, 0.65);
+    font-variation-settings: "opsz" 60;
+  }
+  .timer-block .clock {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 64px;
+    letter-spacing: -0.03em;
+    color: #fff;
+    margin-top: 8px;
+    line-height: 1;
+    text-shadow: 0 0 30px var(--hot-amber-glow);
+  }
+  .timer-block .target {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--olive-dim);
+    margin-top: 8px;
+  }
+  .timer-controls {
+    margin-top: 22px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+  .t-btn {
+    padding: 10px 16px;
+    border-radius: 100px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    border: 1px solid rgba(244, 234, 216, 0.25);
+    color: var(--cream-dim);
+    background: transparent;
+  }
+  .t-btn.primary {
+    background: var(--hot-amber);
+    border-color: var(--hot-amber);
+    color: var(--espresso);
+    font-weight: 700;
+  }
+
+  .step-body {
+    margin: 8px 24px 0;
+    padding: 22px 22px 18px;
+    background: var(--espresso-2);
+    border-radius: 16px;
+    border: 1px solid rgba(244, 234, 216, 0.07);
+    flex: 1;
+    overflow-y: auto;
+    position: relative;
+    z-index: 2;
+  }
+  .step-body h3 {
+    font-family: var(--display);
+    font-weight: 350;
+    font-style: italic;
+    font-size: 24px;
+    letter-spacing: -0.015em;
+    color: #fff;
+    margin-bottom: 8px;
+    font-variation-settings: "opsz" 144, "SOFT" 60;
+  }
+  .step-body p { font-size: 14px; line-height: 1.55; color: rgba(244, 234, 216, 0.78); font-family: var(--display); font-variation-settings: "opsz" 24; }
+  .step-body p + p { margin-top: 10px; }
+  .step-body em { font-style: italic; color: var(--hot-amber); }
+
+  .step-actions {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 24px 8px;
+    position: relative;
+    z-index: 2;
+  }
+  .step-action {
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(244, 234, 216, 0.6);
+  }
+  .step-action svg { width: 14px; height: 14px; }
+
+  .nav-arrows {
+    display: flex;
+    margin: 0 16px 16px;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(244, 234, 216, 0.1);
+    position: relative;
+    z-index: 2;
+  }
+  .nav-arrow {
+    flex: 1;
+    padding: 18px 0;
+    text-align: center;
+    background: var(--espresso-2);
+    color: var(--cream-dim);
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 17px;
+    letter-spacing: -0.005em;
+  }
+  .nav-arrow.next {
+    background: linear-gradient(180deg, var(--hot-amber) 0%, #c45e2a 100%);
+    color: var(--espresso);
+    font-weight: 500;
+  }
+  .nav-arrow.prev { border-right: 1px solid rgba(244, 234, 216, 0.1); flex: 0.6; }
+
+  /* ---------- JOURNAL screen ---------- */
+  .journal { flex: 1; overflow-y: auto; padding: 14px 24px 96px; }
+  .journal h2 {
+    font-family: var(--display);
+    font-weight: 350;
+    font-size: 30px;
+    letter-spacing: -0.025em;
+    line-height: 1;
+    margin-top: 8px;
+    font-variation-settings: "opsz" 144, "SOFT" 80;
+  }
+  .journal h2 em { font-style: italic; color: var(--amber); font-weight: 300; }
+
+  .filter-row {
+    margin-top: 16px;
+    display: flex; gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .filter-row::-webkit-scrollbar { display: none; }
+  .chip {
+    padding: 6px 12px;
+    border: 1px solid var(--rule);
+    border-radius: 100px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+  .chip.active { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+
+  .day-label {
+    margin: 22px 0 10px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .bake-card {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 18px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .bake-card .photo {
+    height: 160px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+  }
+  .bake-card .photo .rating {
+    position: absolute;
+    top: 12px; right: 12px;
+    background: rgba(20, 16, 12, 0.7);
+    color: var(--cream);
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    backdrop-filter: blur(8px);
+  }
+  .bake-card .photo .rating .stars { color: var(--hot-amber); letter-spacing: 1px; }
+  .bake-card .info { padding: 14px 16px 16px; }
+  .bake-card .info .name {
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 19px;
+    font-weight: 350;
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+    font-variation-settings: "opsz" 144, "SOFT" 60;
+  }
+  .bake-card .info .outcome {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--olive);
+    margin-top: 4px;
+  }
+  .bake-card .info .note { margin-top: 10px; font-size: 13.5px; line-height: 1.45; color: var(--ink-soft); }
+  .bake-card .info .tweaks {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dotted var(--rule);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .tweak-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+  .tweak-pill .arrow { color: var(--amber); }
+
+  /* ---------- design system legend ---------- */
+  .legend {
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 56px 32px 96px;
+    border-top: 1px solid var(--rule);
+  }
+  .legend h2 {
+    font-family: var(--display);
+    font-weight: 350;
+    font-size: 36px;
+    letter-spacing: -0.02em;
+    margin-bottom: 32px;
+    font-variation-settings: "opsz" 144, "SOFT" 60;
+  }
+  .legend h2 em { font-style: italic; color: var(--amber); }
+  .legend-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 32px;
+  }
+  @media (max-width: 1024px) { .legend-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px)  { .legend-grid { grid-template-columns: 1fr; } }
+
+  .legend-block .title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .swatch-row { display: flex; flex-direction: column; gap: 8px; }
+  .swatch {
+    display: flex; align-items: center; gap: 12px;
+    font-family: var(--mono); font-size: 11px;
+  }
+  .swatch .chip2 {
+    width: 28px; height: 28px; border-radius: 6px;
+    border: 1px solid rgba(0,0,0,0.08);
+    flex-shrink: 0;
+  }
+  .swatch .name2 { color: var(--ink); }
+  .swatch .hex { color: var(--ink-faint); margin-left: auto; }
+
+  .type-sample .row { padding: 8px 0; border-bottom: 1px dotted var(--rule); }
+  .type-sample .row:last-child { border-bottom: none; }
+  .type-sample .row .meta2 { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 4px; }
+  .type-sample .row .sample { font-family: var(--display); }
+
+  .principle { font-size: 14px; line-height: 1.5; color: var(--ink-soft); padding: 6px 0; border-bottom: 1px dotted var(--rule); }
+  .principle:last-child { border: none; }
+  .principle b { color: var(--ink); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<header class="doc-header">
+  <div class="eyebrow">Bakebook · Frontend Design Direction · v0.1</div>
+  <h1>An <em>editorial cookbook</em><br/>that flips into <em>kitchen mode</em>.</h1>
+  <p class="lede">
+    Two moods, one app. Browsing, editing and journaling read like a well-set cookbook — cream paper, a warm display serif, generous whitespace, hand-drawn rules. The active bake screen flips to espresso-dark with hot amber and a monospace timer because at 5 a.m. you want focus, not paper.
+  </p>
+  <div class="meta">
+    <span><b>Display</b> Fraunces (variable, optical-sized)</span>
+    <span><b>Mono</b> JetBrains Mono</span>
+    <span><b>Tone</b> Tactile, warm, alive</span>
+    <span><b>No</b> Inter · Space Grotesk · purple gradients</span>
+  </div>
+</header>
+
+<section class="gallery">
+
+  <!-- ============ HOME ============ -->
+  <div class="frame-wrap">
+    <div class="phone">
+      <div class="screen">
+        <div class="status-bar">
+          <span>05:42</span>
+          <div class="right">
+            <span style="font-size: 10px;">●●●●</span>
+            <div class="battery"></div>
+          </div>
+        </div>
+        <div class="screen-inner">
+          <div class="home">
+            <div class="hello">Guten Morgen,<br/><em>Nicolas</em>.</div>
+            <div class="date">Sat · 8 Nov · 21° kitchen</div>
+
+            <div class="active-bake-card">
+              <div class="tag"><span class="dot"></span> Bake in progress</div>
+              <div class="title">Buttermilk cornbread</div>
+              <div class="step">Step 4 / 8 · in the oven</div>
+              <div class="timer">12:48</div>
+            </div>
+
+            <div class="section-label">Pinned</div>
+            <div class="pinned">
+              <div class="recipe-card">
+                <div class="img" style="background: linear-gradient(135deg, #d4a86b, #8a5a32); position: relative;">
+                  <svg viewBox="0 0 160 110" style="position:absolute;inset:0;width:100%;height:100%" preserveAspectRatio="xMidYMid slice">
+                    <defs><filter id="g1"><feTurbulence baseFrequency="0.9" numOctaves="2"/><feColorMatrix values="0 0 0 0 0.45  0 0 0 0 0.3  0 0 0 0 0.18  0 0 0 0.4 0"/></filter></defs>
+                    <rect width="160" height="110" filter="url(#g1)"/>
+                    <path d="M30,75 Q50,40 80,40 Q110,40 130,75 Q130,90 80,90 Q30,90 30,75Z" fill="#a87149" opacity="0.95"/>
+                    <path d="M50,68 Q60,50 80,50 M110,68 Q100,50 80,50 M65,72 Q80,62 95,72" stroke="#5a3318" stroke-width="1.5" fill="none" opacity="0.6"/>
+                  </svg>
+                </div>
+                <div class="body">
+                  <div class="name">Swiss Butterzopf</div>
+                  <div class="meta">4 hr · easy · 1 loaf</div>
+                </div>
+              </div>
+              <div class="recipe-card">
+                <div class="img" style="background: linear-gradient(135deg, #e8c989, #c8954c);">
+                  <svg viewBox="0 0 160 110" style="width:100%;height:100%" preserveAspectRatio="xMidYMid slice">
+                    <rect width="160" height="110" fill="#d8a55c"/>
+                    <ellipse cx="80" cy="75" rx="52" ry="14" fill="#a06d2c"/>
+                    <ellipse cx="80" cy="68" rx="50" ry="22" fill="#c89456"/>
+                    <circle cx="60" cy="60" r="2" fill="#5a3a14"/><circle cx="92" cy="56" r="2" fill="#5a3a14"/><circle cx="78" cy="64" r="2" fill="#5a3a14"/><circle cx="105" cy="64" r="2" fill="#5a3a14"/>
+                  </svg>
+                </div>
+                <div class="body">
+                  <div class="name">Buttermilk cornbread</div>
+                  <div class="meta">35 min · easy · skillet</div>
+                </div>
+              </div>
+              <div class="recipe-card">
+                <div class="img" style="background: linear-gradient(135deg, #c48555, #6f4222);"></div>
+                <div class="body">
+                  <div class="name">No-knead Dutch oven</div>
+                  <div class="meta">overnight · easy</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-label">Recent bakes</div>
+            <div class="recents">
+              <div class="recent-row">
+                <div class="thumb" style="background: linear-gradient(135deg, #b8753e, #5e3618);"></div>
+                <div class="info">
+                  <div class="name">Focaccia, rosemary</div>
+                  <div class="sub">Wed · 4th bake</div>
+                </div>
+                <div class="stars">★★★★★</div>
+              </div>
+              <div class="recent-row">
+                <div class="thumb" style="background: linear-gradient(135deg, #c69b6b, #8a5e36);"></div>
+                <div class="info">
+                  <div class="name">Cinnamon rolls</div>
+                  <div class="sub">Sun · 2nd bake · note: more cinnamon</div>
+                </div>
+                <div class="stars">★★★★</div>
+              </div>
+              <div class="recent-row">
+                <div class="thumb" style="background: linear-gradient(135deg, #a07246, #5e3a1c);"></div>
+                <div class="info">
+                  <div class="name">Sourdough boule</div>
+                  <div class="sub">Sat · 7th bake · best yet</div>
+                </div>
+                <div class="stars">★★★★★</div>
+              </div>
+            </div>
+          </div>
+
+          <nav class="nav">
+            <div class="item active">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12L12 4L21 12V20H15V14H9V20H3V12Z"/></svg>
+              Home
+            </div>
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4H17C18 4 19 5 19 6V20L12 17L5 20V6C5 5 6 4 7 4H5Z"/></svg>
+              Recipes
+            </div>
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><path d="M12 8V12L14.5 14"/></svg>
+              Journal
+            </div>
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 4C8 4 6 8 6 12C6 14 7 16 9 17V20H15V17C17 16 18 14 18 12C18 8 16 4 12 4Z"/><path d="M9 17C10 18 14 18 15 17"/></svg>
+              Starter
+            </div>
+          </nav>
+        </div>
+      </div>
+    </div>
+    <div class="frame-label"><b>Home</b>start of day</div>
+  </div>
+
+  <!-- ============ RECIPE ============ -->
+  <div class="frame-wrap">
+    <div class="phone">
+      <div class="screen">
+        <div class="status-bar">
+          <span>09:14</span>
+          <div class="right"><span style="font-size: 10px;">●●●●</span><div class="battery"></div></div>
+        </div>
+        <div class="screen-inner">
+          <div class="recipe">
+            <div class="hero">
+              <div class="back">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6L9 12L15 18"/></svg>
+              </div>
+            </div>
+            <div class="recipe-content">
+              <div class="category">Bread · Swiss · Mom's</div>
+              <h2>Swiss<br/><em>Butterzopf</em></h2>
+              <div class="summary">An enriched braided loaf for Sunday breakfast. Rich with butter and milk, gold from egg yolk. The bake the kitchen smells like home for.</div>
+
+              <div class="stats">
+                <div class="stat"><div class="label">Total</div><div class="val">4 <em>hr</em></div></div>
+                <div class="stat"><div class="label">Active</div><div class="val">35 <em>min</em></div></div>
+                <div class="stat"><div class="label">Yield</div><div class="val">1 <em>loaf</em></div></div>
+              </div>
+
+              <div class="tweak-banner">
+                <div class="icon">✦</div>
+                <div class="content">
+                  <div class="heading">Pending tweak from last bake</div>
+                  <div class="body">Crumb was a touch dry. <em>+5 g milk</em> and reduce bake by 3 min.</div>
+                  <span class="apply">Apply to v3 →</span>
+                </div>
+              </div>
+
+              <div class="h-rule">
+                <span class="label">Ingredients</span>
+                <div class="line">
+                  <svg viewBox="0 0 200 14" preserveAspectRatio="none"><path d="M0,7 Q40,3 80,8 T160,7 T200,8" stroke="#b8a98c" stroke-width="1" fill="none" stroke-linecap="round"/></svg>
+                </div>
+              </div>
+
+              <div class="ingredients">
+                <div class="ing-row">
+                  <span class="name">Zopfmehl <span class="role">flour</span></span>
+                  <span class="grams">500 g</span>
+                  <span class="pct"><b>100%</b></span>
+                </div>
+                <div class="ing-row">
+                  <span class="name">Whole milk <span class="role">dairy</span></span>
+                  <span class="grams">280 g</span>
+                  <span class="pct">56%</span>
+                </div>
+                <div class="ing-row">
+                  <span class="name">Butter, softened <span class="role">fat</span></span>
+                  <span class="grams">80 g</span>
+                  <span class="pct">16%</span>
+                </div>
+                <div class="ing-row">
+                  <span class="name">Egg yolk <span class="role">egg</span></span>
+                  <span class="grams">20 g</span>
+                  <span class="pct">4%</span>
+                </div>
+                <div class="ing-row">
+                  <span class="name">Fresh yeast <span class="role">leaven</span></span>
+                  <span class="grams">15 g</span>
+                  <span class="pct">3%</span>
+                </div>
+                <div class="ing-row">
+                  <span class="name">Salt</span>
+                  <span class="grams">10 g</span>
+                  <span class="pct">2%</span>
+                </div>
+                <div class="ing-row">
+                  <span class="name">Sugar</span>
+                  <span class="grams">15 g</span>
+                  <span class="pct">3%</span>
+                </div>
+              </div>
+
+              <div class="hydration">
+                <span>Hydration</span>
+                <span><b>56%</b> · est. with dairy <b>72%</b></span>
+              </div>
+
+              <div class="h-rule">
+                <span class="label">Method</span>
+                <div class="line">
+                  <svg viewBox="0 0 200 14" preserveAspectRatio="none"><path d="M0,7 Q40,12 80,6 T160,8 T200,6" stroke="#b8a98c" stroke-width="1" fill="none" stroke-linecap="round"/></svg>
+                </div>
+              </div>
+
+              <div class="ing-row" style="grid-template-columns:auto 1fr auto; gap:14px; border:none;">
+                <span class="grams" style="color:var(--amber)">01</span>
+                <span class="name">Warm the milk to 32°C, dissolve yeast.</span>
+                <span class="pct">5 m</span>
+              </div>
+              <div class="ing-row" style="grid-template-columns:auto 1fr auto; gap:14px; border:none;">
+                <span class="grams" style="color:var(--amber)">02</span>
+                <span class="name">Knead dough on hook 10 min, add butter slowly.</span>
+                <span class="pct">12 m</span>
+              </div>
+              <div class="ing-row" style="grid-template-columns:auto 1fr auto; gap:14px; border:none;">
+                <span class="grams" style="color:var(--amber)">03</span>
+                <span class="name">Bulk ferment, covered, until doubled.</span>
+                <span class="pct">90 m</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="start-fab">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5V19L19 12Z"/></svg>
+            <span>Start bake</span>
+          </div>
+
+          <nav class="nav">
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12L12 4L21 12V20H15V14H9V20H3V12Z"/></svg>
+              Home
+            </div>
+            <div class="item active">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4H17C18 4 19 5 19 6V20L12 17L5 20V6C5 5 6 4 7 4H5Z"/></svg>
+              Recipes
+            </div>
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><path d="M12 8V12L14.5 14"/></svg>
+              Journal
+            </div>
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 4C8 4 6 8 6 12C6 14 7 16 9 17V20H15V17C17 16 18 14 18 12C18 8 16 4 12 4Z"/><path d="M9 17C10 18 14 18 15 17"/></svg>
+              Starter
+            </div>
+          </nav>
+        </div>
+      </div>
+    </div>
+    <div class="frame-label"><b>Recipe</b>Butterzopf, ready to bake</div>
+  </div>
+
+  <!-- ============ ACTIVE BAKE ============ -->
+  <div class="frame-wrap">
+    <div class="phone">
+      <div class="screen" style="background: var(--espresso);">
+        <div class="status-bar dark">
+          <span>11:23</span>
+          <div class="right"><span style="font-size: 10px;">●●●●</span><div class="battery"></div></div>
+        </div>
+        <div class="screen-inner bake-screen">
+          <div class="bake-header">
+            <span class="step-name">Step 4 of 11 · Bulk ferment</span>
+            <div class="progress">
+              <span class="done"></span><span class="done"></span><span class="done"></span><span class="current"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+
+          <div class="timer-block">
+            <div class="label">Resting until doubled</div>
+            <div class="clock">1:42:16</div>
+            <div class="target">target dough · 27.5°C</div>
+            <div class="timer-controls">
+              <button class="t-btn">Pause</button>
+              <button class="t-btn">+5 min</button>
+              <button class="t-btn primary">Done</button>
+            </div>
+          </div>
+
+          <div class="step-body">
+            <h3>Bulk ferment</h3>
+            <p>Cover the dough and let it rise in a warm spot until <em>roughly doubled</em>. Don't trust the timer — trust the dough.</p>
+            <p>The poke test: floured finger gently into the side. It should spring back slowly, leaving a faint impression. If it springs back fast, give it more time. If it doesn't spring back at all, you're a touch overproofed.</p>
+            <p>If the kitchen is below 20°C, this can take 30–45 min longer.</p>
+          </div>
+
+          <div class="step-actions">
+            <div class="step-action">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7H21V19C21 20 20 21 19 21H5C4 21 3 20 3 19V7Z"/><circle cx="12" cy="13" r="4"/><path d="M8 7L9 4H15L16 7"/></svg>
+              Add photo
+            </div>
+            <div class="step-action">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2L20 8M14 2L4 12V20H12L22 10M14 2L22 10"/></svg>
+              Add tweak
+            </div>
+          </div>
+
+          <div class="nav-arrows">
+            <div class="nav-arrow prev">◀ Prev</div>
+            <div class="nav-arrow next">Next step ▶</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="frame-label"><b>Active bake</b>kitchen mode, screen kept awake</div>
+  </div>
+
+  <!-- ============ JOURNAL ============ -->
+  <div class="frame-wrap">
+    <div class="phone">
+      <div class="screen">
+        <div class="status-bar">
+          <span>20:08</span>
+          <div class="right"><span style="font-size: 10px;">●●●●</span><div class="battery"></div></div>
+        </div>
+        <div class="screen-inner">
+          <div class="journal">
+            <h2>Bake <em>journal</em></h2>
+
+            <div class="filter-row">
+              <span class="chip active">All</span>
+              <span class="chip">Bread</span>
+              <span class="chip">Sweet</span>
+              <span class="chip">Pizza</span>
+              <span class="chip">★★★★★</span>
+              <span class="chip">With tweaks</span>
+            </div>
+
+            <div class="day-label">Today · 8 Nov</div>
+
+            <div class="bake-card">
+              <div class="photo" style="background: linear-gradient(135deg, #c48a52, #5e3618);">
+                <svg viewBox="0 0 380 160" style="width:100%;height:100%" preserveAspectRatio="xMidYMid slice">
+                  <defs><filter id="jg1"><feTurbulence baseFrequency="1.4" numOctaves="2"/><feColorMatrix values="0 0 0 0 0.4  0 0 0 0 0.25  0 0 0 0 0.12  0 0 0 0.5 0"/></filter></defs>
+                  <rect width="380" height="160" fill="#9c5e2c"/>
+                  <rect width="380" height="160" filter="url(#jg1)" opacity="0.6"/>
+                  <ellipse cx="190" cy="120" rx="160" ry="38" fill="#5e3618"/>
+                  <ellipse cx="190" cy="98" rx="155" ry="44" fill="#a87146"/>
+                  <g opacity="0.5"><circle cx="120" cy="92" r="2.5" fill="#3a1f0c"/><circle cx="170" cy="80" r="3" fill="#3a1f0c"/><circle cx="220" cy="86" r="2.5" fill="#3a1f0c"/><circle cx="260" cy="98" r="2.5" fill="#3a1f0c"/><circle cx="155" cy="105" r="2" fill="#3a1f0c"/></g>
+                </svg>
+                <div class="rating"><span class="stars">★★★★★</span></div>
+              </div>
+              <div class="info">
+                <div class="name">Buttermilk cornbread</div>
+                <div class="outcome">Great · 4th bake</div>
+                <div class="note">Crust on the cast iron was perfect. Crumb a touch tighter than I'd like — could be the buttermilk was a bit cold.</div>
+                <div class="tweaks">
+                  <div class="tweak-pill"><span class="arrow">→</span> Use room-temp buttermilk next time</div>
+                  <div class="tweak-pill"><span class="arrow">→</span> +5 min preheat for skillet</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="day-label">Wed · 5 Nov</div>
+
+            <div class="bake-card">
+              <div class="photo" style="background: linear-gradient(135deg, #b8753e, #5e3618); position: relative;">
+                <svg viewBox="0 0 380 160" style="width:100%;height:100%" preserveAspectRatio="xMidYMid slice">
+                  <rect width="380" height="160" fill="#a06736"/>
+                  <ellipse cx="190" cy="100" rx="170" ry="50" fill="#c08453"/>
+                  <g fill="#5e3618" opacity="0.6">
+                    <ellipse cx="100" cy="90" rx="6" ry="3"/><ellipse cx="160" cy="80" rx="6" ry="3"/><ellipse cx="220" cy="85" rx="6" ry="3"/><ellipse cx="280" cy="95" rx="6" ry="3"/>
+                    <ellipse cx="130" cy="110" rx="6" ry="3"/><ellipse cx="195" cy="115" rx="6" ry="3"/><ellipse cx="250" cy="112" rx="6" ry="3"/>
+                  </g>
+                  <g stroke="#3d6b2a" stroke-width="1.2" fill="none" opacity="0.7">
+                    <path d="M80,75 L82,68 L84,75"/><path d="M84,75 L88,67"/>
+                    <path d="M210,72 L212,65 L214,72"/>
+                  </g>
+                </svg>
+                <div class="rating"><span class="stars">★★★★★</span></div>
+              </div>
+              <div class="info">
+                <div class="name">Focaccia, rosemary &amp; flake salt</div>
+                <div class="outcome">Best yet · 4th bake</div>
+                <div class="note">The 24h cold ferment is the move. Open crumb, audible crust.</div>
+              </div>
+            </div>
+          </div>
+
+          <nav class="nav">
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12L12 4L21 12V20H15V14H9V20H3V12Z"/></svg>
+              Home
+            </div>
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4H17C18 4 19 5 19 6V20L12 17L5 20V6C5 5 6 4 7 4H5Z"/></svg>
+              Recipes
+            </div>
+            <div class="item active">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><path d="M12 8V12L14.5 14"/></svg>
+              Journal
+            </div>
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 4C8 4 6 8 6 12C6 14 7 16 9 17V20H15V17C17 16 18 14 18 12C18 8 16 4 12 4Z"/><path d="M9 17C10 18 14 18 15 17"/></svg>
+              Starter
+            </div>
+          </nav>
+        </div>
+      </div>
+    </div>
+    <div class="frame-label"><b>Journal</b>photo-led, tweak-aware</div>
+  </div>
+
+</section>
+
+<section class="legend">
+  <h2>Design <em>system</em></h2>
+  <div class="legend-grid">
+
+    <div class="legend-block">
+      <div class="title">Cookbook palette</div>
+      <div class="swatch-row">
+        <div class="swatch"><div class="chip2" style="background:#f4ead4"></div><span class="name2">Cream</span><span class="hex">#f4ead4</span></div>
+        <div class="swatch"><div class="chip2" style="background:#f8f1dd"></div><span class="name2">Paper</span><span class="hex">#f8f1dd</span></div>
+        <div class="swatch"><div class="chip2" style="background:#1d1410"></div><span class="name2">Ink</span><span class="hex">#1d1410</span></div>
+        <div class="swatch"><div class="chip2" style="background:#b8501f"></div><span class="name2">Amber</span><span class="hex">#b8501f</span></div>
+        <div class="swatch"><div class="chip2" style="background:#6b6939"></div><span class="name2">Olive</span><span class="hex">#6b6939</span></div>
+        <div class="swatch"><div class="chip2" style="background:#b8a98c"></div><span class="name2">Rule</span><span class="hex">#b8a98c</span></div>
+      </div>
+    </div>
+
+    <div class="legend-block">
+      <div class="title">Kitchen mode palette</div>
+      <div class="swatch-row">
+        <div class="swatch"><div class="chip2" style="background:#14100c"></div><span class="name2">Espresso</span><span class="hex">#14100c</span></div>
+        <div class="swatch"><div class="chip2" style="background:#1e1813"></div><span class="name2">Espresso 2</span><span class="hex">#1e1813</span></div>
+        <div class="swatch"><div class="chip2" style="background:#e9dcc1"></div><span class="name2">Cream dim</span><span class="hex">#e9dcc1</span></div>
+        <div class="swatch"><div class="chip2" style="background:#ec7a37"></div><span class="name2">Hot amber</span><span class="hex">#ec7a37</span></div>
+        <div class="swatch"><div class="chip2" style="background:#9a956a"></div><span class="name2">Olive dim</span><span class="hex">#9a956a</span></div>
+      </div>
+    </div>
+
+    <div class="legend-block type-sample">
+      <div class="title">Typography</div>
+      <div class="row">
+        <div class="meta2">Display · Fraunces 350 · italic</div>
+        <div class="sample" style="font-size: 28px; line-height: 1; letter-spacing: -0.025em; font-style: italic; font-variation-settings: 'opsz' 144, 'SOFT' 80;"><em>Butterzopf</em></div>
+      </div>
+      <div class="row">
+        <div class="meta2">Body · Fraunces 400 reading</div>
+        <div class="sample" style="font-size: 15px; line-height: 1.5; font-variation-settings: 'opsz' 24;">Cover the dough and let it rise in a warm spot until roughly doubled.</div>
+      </div>
+      <div class="row">
+        <div class="meta2">Mono · JetBrains Mono</div>
+        <div class="sample" style="font-family: var(--mono); font-size: 22px; letter-spacing: -0.02em;">1:42:16</div>
+      </div>
+      <div class="row">
+        <div class="meta2">Label · Mono 11px tracked</div>
+        <div class="sample" style="font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-faint);">Pending tweak</div>
+      </div>
+    </div>
+
+    <div class="legend-block">
+      <div class="title">Principles</div>
+      <div class="principle"><b>Two moods, one app.</b> Cream paper for thinking and remembering. Espresso amber for doing.</div>
+      <div class="principle"><b>Mono is for numbers.</b> Grams, percentages, timers, dates, labels. Everything else is the serif.</div>
+      <div class="principle"><b>Tap targets ≥ 44 px.</b> Kitchen hands. Floury fingers.</div>
+      <div class="principle"><b>Hand-drawn rules.</b> SVG paths with a wobble. No straight CSS borders for section dividers.</div>
+      <div class="principle"><b>Photos lead.</b> The journal is a stack of photos with text under them, never the inverse.</div>
+      <div class="principle"><b>No purple. No Inter.</b> Ever.</div>
+    </div>
+
+  </div>
+</section>
+
+</body>
+</html>

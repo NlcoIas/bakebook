@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# Next.js
+.next/
+out/
+dist/
+
+# Environment
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Test results
+test-results/
+playwright-report/
+!test-results/screenshots/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+*.tsbuildinfo
