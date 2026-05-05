@@ -687,7 +687,7 @@ async def ready_by(
     target: str = Query(..., description="ISO8601 target end time"),
     db: AsyncSession = Depends(get_db),
 ):
-    from app.services.schedule import StepInput, compute_ready_by
+    from app.services.schedule import ScheduleStep, calculate_schedule
 
     result = await db.execute(_recipe_query().where(Recipe.id == recipe_id))
     recipe = result.scalar_one_or_none()
@@ -697,7 +697,7 @@ async def ready_by(
     target_dt = datetime.fromisoformat(target)
 
     steps = [
-        StepInput(
+        ScheduleStep(
             ord=s.ord,
             timer_seconds=s.timer_seconds,
             min_seconds=s.min_seconds,
@@ -707,7 +707,7 @@ async def ready_by(
         for s in recipe.steps
     ]
 
-    result_data = compute_ready_by(steps, target_dt)
+    result_data = calculate_schedule(steps, target_dt)
     return {
         "startAt": result_data.start_at.isoformat(),
         "expectedEnd": result_data.expected_end.isoformat(),

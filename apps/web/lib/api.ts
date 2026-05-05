@@ -114,6 +114,7 @@ export interface Recipe extends RecipeListItem {
   nutrition: RecipeNutrition | null;
   cost: RecipeCost | null;
   ratios: RecipeRatios | null;
+  allergens: string[];
 }
 
 // --- API functions ---
@@ -129,6 +130,24 @@ export const api = {
     },
     get: (id: string) => fetchJson<Recipe>(`/recipes/${id}`),
     getBySlug: (slug: string) => fetchJson<Recipe>(`/recipes/by-slug/${slug}`),
+    pendingTweaks: (id: string) =>
+      fetchJson<{ id: string; bakeId: string; change: string; reason: string | null }[]>(
+        `/recipes/${id}/pending-tweaks`
+      ),
+    applyTweaks: (recipeId: string, tweakIds: string[]) =>
+      fetchJson<Recipe>(`/recipes/${recipeId}/tweaks/apply`, {
+        method: "POST",
+        body: JSON.stringify({ tweakIds }),
+      }),
+    readyBy: (id: string, target: string) =>
+      fetchJson<{ startAt: string; expectedEnd: string; rangeStartAt: string; rangeEndAt: string }>(
+        `/recipes/${id}/ready-by?target=${encodeURIComponent(target)}`
+      ),
+    scale: (id: string, mode: string, value: number) =>
+      fetchJson<{ id: string; name: string; grams: number | null; originalGrams: number | null; role: string | null }[]>(
+        `/recipes/${id}/scale`,
+        { method: "POST", body: JSON.stringify({ mode, value }) }
+      ),
   },
   bakes: {
     list: () => fetchJson<BakeListItem[]>("/bakes"),

@@ -10,6 +10,8 @@ import { SectionLabel } from "@/components/shared/SectionLabel";
 import { NutritionPanel } from "@/components/recipe/NutritionPanel";
 import { CostPanel } from "@/components/recipe/CostPanel";
 import { RatiosPanel } from "@/components/recipe/RatiosPanel";
+import { TweakBanner } from "@/components/recipe/TweakBanner";
+import { ReadyByPanel } from "@/components/recipe/ReadyByPanel";
 
 function formatTime(minutes: number): string {
   if (minutes < 60) return `${minutes} min`;
@@ -92,9 +94,26 @@ function RecipeDetail() {
         {recipe.servings > 1 && <span>{recipe.servings} servings</span>}
       </div>
 
+      {/* Allergen badges */}
+      {recipe.allergens && recipe.allergens.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {recipe.allergens.map((a) => (
+            <span
+              key={a}
+              className="font-mono text-[9px] tracking-[0.14em] uppercase px-2 py-0.5 rounded-full bg-warn/15 text-warn border border-warn/30"
+            >
+              {a}
+            </span>
+          ))}
+        </div>
+      )}
+
       <div className="mt-4">
         <HandRule seed={recipe.title.charCodeAt(0)} />
       </div>
+
+      {/* Pending tweaks */}
+      <TweakBanner recipeId={recipe.id} versionNumber={recipe.versionNumber} />
 
       {/* Ingredients */}
       <SectionLabel>Ingredients</SectionLabel>
@@ -195,6 +214,7 @@ function RecipeDetail() {
         {recipe.ratios && (
           <RatiosPanel ratios={recipe.ratios} />
         )}
+        <ReadyByPanel recipeId={recipe.id} />
       </div>
 
       {/* Equipment */}
