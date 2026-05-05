@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="80" fill="#f4ead4"/>
+  <text x="256" y="300" text-anchor="middle" font-family="Georgia, serif" font-size="200" font-weight="350" fill="#1d1410" font-style="italic">B</text>
+  <text x="256" y="420" text-anchor="middle" font-family="monospace" font-size="48" fill="#8a7a6c" letter-spacing="8">BAKEBOOK</text>
+</svg>

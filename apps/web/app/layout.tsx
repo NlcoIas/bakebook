@@ -20,11 +20,22 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Bakebook",
   description: "Personal baking companion",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Bakebook",
+  },
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#b8501f",
 };
 
 export default function RootLayout({
