@@ -89,7 +89,8 @@ def _get_per_100g(
     if ingredient.pantry_nutrition_ref is not None:
         entry = nutrition_table.get(ingredient.pantry_nutrition_ref)
         if entry is not None:
-            return entry, True
+            # Convert float values from JSON to Decimal
+            return {k: Decimal(str(v)) for k, v in entry.items() if k in MACRO_KEYS}, True
 
     return {k: _ZERO for k in MACRO_KEYS}, False
 

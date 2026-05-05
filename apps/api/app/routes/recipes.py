@@ -105,12 +105,13 @@ def _compute_recipe_data(recipe: Recipe) -> dict:
     ratios = compute_ratios(recipe.ingredients)
     if ratios:
         result["ratios"] = {
+            "flourTotalG": float(ratios.flour_total_g),
             "hydration": float(ratios.hydration),
             "hydrationWithDairy": float(ratios.hydration_with_dairy),
-            "salt": float(ratios.salt),
-            "sugar": float(ratios.sugar),
-            "fat": float(ratios.fat),
-            "prefermentedFlour": float(ratios.prefermented_flour),
+            "salt": float(ratios.salt_pct),
+            "sugar": float(ratios.sugar_pct),
+            "fat": float(ratios.fat_pct),
+            "prefermentedFlour": float(ratios.prefermented_flour_pct),
             "inoculationRate": float(ratios.inoculation_rate),
         }
 
