@@ -130,6 +130,12 @@ export const api = {
     },
     get: (id: string) => fetchJson<Recipe>(`/recipes/${id}`),
     getBySlug: (slug: string) => fetchJson<Recipe>(`/recipes/by-slug/${slug}`),
+    create: (data: Record<string, unknown>) =>
+      fetchJson<Recipe>("/recipes", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: Record<string, unknown>) =>
+      fetchJson<Recipe>(`/recipes/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    delete: (id: string) =>
+      fetchJson<void>(`/recipes/${id}`, { method: "DELETE" }),
     pendingTweaks: (id: string) =>
       fetchJson<{ id: string; bakeId: string; change: string; reason: string | null }[]>(
         `/recipes/${id}/pending-tweaks`

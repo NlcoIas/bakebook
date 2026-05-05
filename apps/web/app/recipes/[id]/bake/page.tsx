@@ -6,6 +6,103 @@ import { useCallback, useEffect, useState } from "react";
 import { api, type Recipe, type BakeDetail } from "@/lib/api";
 import { useTimer, formatTimer } from "@/lib/timer";
 
+function MidBakeActions({ bakeId, stepOrd }: { bakeId: string; stepOrd: number }) {
+  const [showTweak, setShowTweak] = useState(false);
+  const [tweakText, setTweakText] = useState("");
+  const [applyNext, setApplyNext] = useState(false);
+  const queryClient = useQueryClient();
+
+  const tweakMutation = useMutation({
+    mutationFn: () => api.bakes.addTweak(bakeId, { change: tweakText, applyNextTime: applyNext }),
+    onSuccess: () => {
+      setShowTweak(false);
+      setTweakText("");
+      setApplyNext(false);
+    },
+  });
+
+  const photoMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const upload = await api.bakes.requestPhotoUpload(bakeId);
+      if (!upload.presignedUrl.startsWith("file://")) {
+        await fetch(upload.presignedUrl, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
+      }
+      await api.bakes.confirmPhoto(bakeId, upload.r2Key, "process", stepOrd);
+    },
+  });
+
+  return (
+    <>
+      <div className="px-5 flex gap-2 justify-center">
+        <label className="px-4 py-2 font-mono text-[9px] tracking-[0.18em] uppercase border border-[#3a2e24] rounded-pill text-[#9a956a] cursor-pointer">
+          📷 Photo
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) photoMutation.mutate(file);
+            }}
+          />
+        </label>
+        <button
+          type="button"
+          onClick={() => setShowTweak(true)}
+          className="px-4 py-2 font-mono text-[9px] tracking-[0.18em] uppercase border border-[#3a2e24] rounded-pill text-[#9a956a]"
+        >
+          ✏️ Tweak
+        </button>
+      </div>
+
+      {showTweak && (
+        <div className="fixed inset-0 bg-[#14100c]/90 flex items-center justify-center z-50 p-6">
+          <div className="bg-[#1e1813] rounded-card p-5 w-full max-w-sm border border-[#3a2e24]">
+            <p className="font-display italic text-[16px] text-[#e9dcc1]" style={{ fontVariationSettings: '"opsz" 60' }}>
+              Log a tweak
+            </p>
+            <textarea
+              value={tweakText}
+              onChange={(e) => setTweakText(e.target.value)}
+              placeholder="e.g. +10 g water, dough was tight"
+              rows={3}
+              className="mt-3 w-full px-3 py-2 bg-[#14100c] border border-[#3a2e24] rounded-lg text-[#e9dcc1] font-display text-[14px] focus:outline-none focus:border-[#ec7a37] resize-none"
+              style={{ fontVariationSettings: '"opsz" 24' }}
+            />
+            <label className="mt-2 flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={applyNext}
+                onChange={(e) => setApplyNext(e.target.checked)}
+                className="accent-[#ec7a37]"
+              />
+              <span className="font-mono text-[10px] text-[#9a956a]">Apply to next version</span>
+            </label>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowTweak(false)}
+                className="flex-1 py-2.5 font-mono text-[10px] tracking-[0.18em] uppercase border border-[#3a2e24] rounded-pill text-[#8a7a6c]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => tweakMutation.mutate()}
+                disabled={!tweakText || tweakMutation.isPending}
+                className="flex-1 py-2.5 font-mono text-[10px] tracking-[0.18em] uppercase bg-[#ec7a37] text-[#14100c] rounded-pill font-medium disabled:opacity-50"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 function PreBakeModal({
   onStart,
   onSkip,
@@ -259,6 +356,9 @@ function ActiveBakeView({ recipe, bake }: { recipe: Recipe; bake: BakeDetail }) 
           timerSeconds={step.timerSeconds}
         />
       </div>
+
+      {/* Mid-bake actions */}
+      <MidBakeActions bakeId={bake.id} stepOrd={step.ord} />
 
       {/* Navigation */}
       <div className="px-5 pb-8 flex gap-3">

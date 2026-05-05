@@ -4,7 +4,8 @@ test.describe("Recipe list", () => {
   test("shows all 8 recipes", async ({ page }) => {
     await page.goto("/recipes");
     await page.waitForSelector("a[href^='/recipes/']");
-    const cards = page.locator("a[href^='/recipes/']");
+    // Exclude /recipes/new link — only count recipe detail links (UUID paths)
+    const cards = page.locator("a[href^='/recipes/0']");
     await expect(cards).toHaveCount(8);
 
     await page.screenshot({

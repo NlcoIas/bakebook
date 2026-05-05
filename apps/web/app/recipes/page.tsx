@@ -73,6 +73,15 @@ export default function RecipesPage() {
         Recipes
       </h1>
 
+      <div className="mt-3">
+        <Link
+          href="/recipes/new"
+          className="inline-block font-mono text-[10px] tracking-[0.18em] uppercase px-4 py-2 bg-amber text-cream rounded-pill font-medium"
+        >
+          + New recipe
+        </Link>
+      </div>
+
       <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
         {CATEGORIES.map((cat) => (
           <button
