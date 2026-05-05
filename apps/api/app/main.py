@@ -3,8 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.auth import get_current_user
 from app.config import settings
+from app.routes.pantry import router as pantry_router
+from app.routes.recipes import router as recipes_router
 
 app = FastAPI(title="Bakebook API", version="0.0.1")
+app.include_router(recipes_router)
+app.include_router(pantry_router)
 
 # CORS for local dev
 if settings.env == "dev":
