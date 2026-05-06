@@ -29,6 +29,8 @@ function RecipeDetail() {
     queryFn: () => api.recipes.get(id),
   });
 
+  const [scale, setScale] = useState(1);
+
   if (isLoading) {
     return (
       <div className="px-4 pt-12 text-center">
@@ -48,8 +50,6 @@ function RecipeDetail() {
       </div>
     );
   }
-
-  const [scale, setScale] = useState(1);
 
   // Group ingredients
   const ingredientGroups: { label: string | null; items: typeof recipe.ingredients }[] = [];
