@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { api } from "@/lib/api";
 import { HandRule } from "@/components/shared/HandRule";
 import { SectionLabel } from "@/components/shared/SectionLabel";
@@ -48,6 +48,8 @@ function RecipeDetail() {
       </div>
     );
   }
+
+  const [scale, setScale] = useState(1);
 
   // Group ingredients
   const ingredientGroups: { label: string | null; items: typeof recipe.ingredients }[] = [];
@@ -115,8 +117,29 @@ function RecipeDetail() {
       {/* Pending tweaks */}
       <TweakBanner recipeId={recipe.id} versionNumber={recipe.versionNumber} />
 
+      {/* Scale control */}
+      <div className="mt-3 flex items-center gap-3 border border-rule rounded-card p-3 bg-paper">
+        <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-ink-faint">Scale</span>
+        <div className="flex-1 flex items-center gap-2">
+          {[0.5, 1, 1.5, 2, 3].map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setScale(s)}
+              className={`font-mono text-[11px] px-2.5 py-1 rounded-full border transition-colors ${
+                scale === s
+                  ? "bg-ink text-cream border-ink"
+                  : "bg-transparent text-ink-faint border-rule"
+              }`}
+            >
+              {s}×
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Ingredients */}
-      <SectionLabel>Ingredients</SectionLabel>
+      <SectionLabel>Ingredients{scale !== 1 ? ` (${scale}×)` : ""}</SectionLabel>
       <div className="mt-3 flex flex-col gap-1">
         {ingredientGroups.map((group, gi) => (
           <div key={gi}>
@@ -138,10 +161,10 @@ function RecipeDetail() {
                   {ing.optional && <span className="text-[11px]"> (optional)</span>}
                 </span>
                 <span className="font-mono text-[12px] font-medium text-ink ml-2 whitespace-nowrap">
-                  {ing.grams != null ? `${ing.grams} g` : ""}
+                  {ing.grams != null ? `${Math.round(ing.grams * scale)} g` : ""}
                   {ing.unitDisplay && ing.unitDisplayQty && (
                     <span className="text-ink-faint ml-1">
-                      ({ing.unitDisplayQty} {ing.unitDisplay})
+                      ({Math.round(ing.unitDisplayQty * scale * 10) / 10} {ing.unitDisplay})
                     </span>
                   )}
                 </span>
