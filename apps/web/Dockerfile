@@ -14,9 +14,10 @@ FROM base AS builder
 WORKDIR /app
 ARG API_URL=http://api:8000
 ENV API_URL=$API_URL
+ENV NODE_ENV=production
 COPY --from=deps /app ./
 COPY . .
-RUN pnpm --filter web build
+RUN echo "Building with API_URL=$API_URL" && pnpm --filter web build
 
 FROM node:20-alpine AS runner
 WORKDIR /app
